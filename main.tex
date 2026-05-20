@@ -1,0 +1,21 @@
+\documentclass[11pt,a4paper]{report}
+
+\input{config/data}
+\input{config/preamble}
+
+\begin{document}
+
+\input{front}
+
+\tableofcontents
+
+\part{Ejemplo}
+
+% Capitulo de ejemplo en estructura por parte/capitulo
+\include{contents/Parte1/Capitulo1/Ejemplo}
+
+% --- ANEXOS ---
+\appendix
+\include{contents/Anexos}
+
+\end{document}

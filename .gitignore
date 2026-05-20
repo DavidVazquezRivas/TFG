@@ -1,0 +1,17 @@
+# Latex compilation files
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.lof
+*.lot
+*.out
+*.synctex.gz
+*.toc
+*.run.xml
+
+# VSCode Local History extension
+.history/
