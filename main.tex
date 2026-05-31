@@ -1,21 +1,33 @@
-\documentclass[11pt,a4paper]{report}
+\documentclass[spanish,GINF]{config/TFGEPSUIB}
 
 \input{config/data}
 \input{config/preamble}
 
 \begin{document}
 
-\input{front}
+\portada
+\portadainterior
 
+\frontmatter
 \tableofcontents
 
-\part{Ejemplo}
+\mainmatter\pagestyle{ruled}
 
-% Capitulo de ejemplo en estructura por parte/capitulo
-\include{contents/Parte1/Capitulo1/Ejemplo}
+% Acrónimos
+\cleardoublepage\phantomsection
+\include{contents/Acronimos/Acronimos}
+
+\cleardoublepage\phantomsection
+\include{contents/Contexto/Contexto}
 
 % --- ANEXOS ---
 \appendix
+\cleardoublepage\phantomsection
 \include{contents/Anexos}
+
+\backmatter
+\bibliographystyle{IEEEtran}
+% Bibliografía centralizada en el fichero raíz `Bibliografia.bib`
+\bibliography{Bibliografia}
 
 \end{document}

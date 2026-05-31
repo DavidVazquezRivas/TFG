@@ -1,79 +1,58 @@
-# TFG LaTeX — Plantilla mínima
+# TFG LaTeX — Plantilla adaptada a TFGEPSUIB
 
-Proyecto LaTeX minimalista para la memoria del TFG. Plantilla limpia y organizada por partes y capítulos.
+Este repositorio contiene una memoria TFG adaptada a la clase oficial `TFGEPSUIB` (fichero de clase ubicado en `config/TFGEPSUIB.cls`). El proyecto sigue la plantilla de la universidad y usa BibTeX/`IEEEtran` con una bibliografía centralizada en `Bibliografia.bib` en la raíz del proyecto.
 
-## Estructura
+## Estructura principal (actualizada)
 
-- `main.tex` — entrada principal.
-- `config/preamble.tex` — paquetes y estilos (incluye `biblatex`).
-- `config/data.tex` — metadatos (autor, título, etc.).
-- `contents/{Parte}/{Capitulo}/` — contenido por parte y capítulo.
+- `main.tex` — entrada principal (usa `config/TFGEPSUIB.cls`).
+- `config/preamble.tex` — paquetes y configuración (la plantilla evita `geometry`, `titlesec` y `fancyhdr`).
+- `config/data.tex` — metadatos (autor, título, tutores, estudios, etc.).
+- `Bibliografia.bib` — bibliografía consolidada en la raíz (uso con `IEEEtran`).
+- `contents/CapituloN/` — capítulos principales (se eliminó la estructura por `Parte`).
+- `contents/Acronimos/Acronims.tex` — fichero de acrónimos (se imprime solo los usados).
 - `images/` — recursos gráficos.
 
-## Uso rápido
+Hemos movido los capítulos fuera de `contents/Parte1/` a `contents/CapituloN/` para simplificar la jerarquía de la memoria. La bibliografía se mantiene centralizada en `Bibliografia.bib`.
 
-Compilar desde la raíz del proyecto:
+## Compilación
+
+Recomendado (latexmk):
 
 ```powershell
 latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
 ```
 
-`latexmk` invocará `biber` automáticamente si `biblatex` está en uso.
-
-## Limpieza de auxiliares
-
-El proyecto incluye un script de limpieza disponible en `scripts/clean.ps1`.
-
-Ejecuta:
+Flujo clásico (si prefieres pasos manuales):
 
 ```powershell
-.\scripts\clean.ps1
+pdflatex -interaction=nonstopmode main.tex
+bibtex main
+pdflatex -interaction=nonstopmode main.tex
+pdflatex -interaction=nonstopmode main.tex
 ```
 
-El script usa `latexmk -C` si está instalado, y en caso contrario elimina recursivamente las extensiones auxiliares más comunes.
+Notas:
+- La plantilla usa BibTeX con `IEEEtran.bst`. Si necesitas BibLaTeX/Biber explícitamente, dímelo y lo revertimos.
+- `latexmk` detectará automáticamente las dependencias si lo usas.
 
-## Convenciones recomendadas
+## Acrónimos
 
-- Mantén cada capítulo en `contents/{Parte}/{Capitulo}/archivo.tex`.
-- Guarda la bibliografía por capítulo con `biblatex` (`\addbibresource{...}`) y usa `refsection` si quieres bibliografías separadas por capítulo.
+Se añadió soporte de acrónimos en `config/preamble.tex` y el fichero de ejemplo en `contents/Acronimos/Acronims.tex`. Los acrónimos se imprimen solo si están usados (`printonlyused`).
 
-## Bibliografía (IEEE)
+## Limpieza / Backups
 
-El proyecto utiliza `biblatex` con estilo IEEE en el preámbulo. Añade entradas `.bib` en los directorios de capítulo o registra recursos en `config/preamble.tex`.
+- El script de limpieza sigue disponible en `scripts/clean.ps1`.
+- `front.tex` (plantilla anterior de portada) se ha movido a `backups/front.tex.removed` antes de eliminarla.
 
-Para compilar y actualizar bibliografías simplemente ejecuta:
+## Problemas conocidos y advertencias
 
-```powershell
-latexmk -pdf
-```
+- Durante la migración aparecen advertencias PDF relacionadas con identificadores duplicados en hipervínculos (warnings de `destination with the same identifier`). Son inofensivas; se redujeron añadiendo secciones claras antes de las inclusiones. Si ves bookmarks/anchors duplicados en el visor PDF, puedo aplicar una limpieza más agresiva.
+- Una entrada (`tool2022pkg`) no se ajustaba exactamente al estilo IEEE; BibTeX mostró una advertencia en la ejecución. Puedo normalizar esa entrada si quieres.
 
-## Guía rápida: BibTeX / BibLaTeX (IEEE)
+## Tareas siguientes que puedo hacer por ti
 
-Breve resumen y buenas prácticas para usar `.bib` en este proyecto:
+- Actualizar `docs/README.md` (hecho).
+- Revisar visual del PDF y ajustar estilos finos (encabezados, saltos de página, portadas).
+- Repartir entradas `.bib` por capítulos o mantener la base consolidada en `Bibliografia.bib` en la raíz (este proyecto usa la opción centralizada por defecto).
 
-- ¿Qué es un `.bib`?: base de datos BibTeX con entradas `@article`, `@book`, `@inproceedings`, etc.
-- Entradas: incluya `author`, `title`, `year` y `doi` cuando esté disponible; use `{}` en `title` para preservar mayúsculas importantes.
-- Convención de claves: `apellidoAñoPalabra` (por ejemplo `knuth1984texbook`).
-- Organización por archivos: puedes tener un `.bib` por capítulo, p.ej. `contents/Parte1/Capitulo1/Ejemplo.bib`.
-- Bibliografías por capítulo: con `biblatex` registre las fuentes con `\addbibresource{...}` en el preámbulo y en cada capítulo use `\begin{refsection} ... \printbibliography[heading=subbibliography]` para imprimir la bibliografía local.
-- Compilación (si no usas `latexmk`):
-
-```bash
-pdflatex main.tex
-biber main
-pdflatex main.tex
-pdflatex main.tex
-```
-
-O simplemente `latexmk -pdf` (recomendado).
-
-## Ayuda y tareas comunes
-
-Si necesitas que haga algo por ti, dime exactamente cuál de las siguientes opciones prefieres y lo implemento:
-
-- **Distribuir entradas**: mover entradas de una antigua `references.bib` a los `.bib` por capítulo.
-- **Crear plantillas `.bib`**: generar plantillas vacías por capítulo en `contents/...`.
-- **Ejemplo listo para compilar**: actualizar `main.tex` con `biblatex`+`refsection=chapter` y ejemplo completo.
-- **Limpiar historial**: eliminar los archivos en `.history` relacionados con `.bib` o temporales.
-
-Indica la opción (por ejemplo: “Distribuir entradas”) y procedo.
+Pide la acción que prefieras y la aplico.

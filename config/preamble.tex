@@ -1,26 +1,26 @@
 % DOCUMENT CLASS AND CODING
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{geometry}
-\geometry{margin=2.5cm}
+% Dejar que la clase controle márgenes y estilos; añadir rutas de imágenes
+\graphicspath{{images/}{reference/}{.}}
 
-% PACKAGES
+% PACKAGES (solo paquetes complementarios; la clase oficial gestiona layout/chapters/pagestyles)
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{xcolor}
-\usepackage{titlesec}
 \usepackage{lmodern}
 \usepackage{microtype}
 \usepackage[hidelinks]{hyperref}
-\usepackage{fancyhdr}
+% Acronyms (print only used acronyms)
+\usepackage[printonlyused]{acronym}
 \usepackage{listings}
 \usepackage{booktabs}
 \usepackage{amsmath}
 \usepackage{subcaption}
-% Bibliografía con biblatex (biber)
-\usepackage[backend=biber,style=ieee,sorting=none]{biblatex}
-% Añadir los recursos .bib por capítulo aquí (ruta relativa al main.tex)
-\addbibresource{contents/Parte1/Capitulo1/Ejemplo.bib}
+
+% Nota: se han eliminado `geometry`, `titlesec`, `fancyhdr` y `biblatex` porque la clase
+% `TFGEPSUIB` gestiona márgenes, estilos de capítulo, encabezados/pies y la plantilla
+% oficial usa BibTeX/IEEEtran para la bibliografía.
 
 %%%%%%% COLORES %%%%%%%
 \definecolor{myblue}{RGB}{0,82,155}
@@ -29,73 +29,6 @@
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
-
-%%%%%%% RENOMBRES %%%%%%%
-\renewcommand{\chaptername}{Capítulo}
-\renewcommand{\contentsname}{Índice}
-\renewcommand{\tablename}{Tabla}
-\renewcommand{\figurename}{Figura}
-\renewcommand{\partname}{Parte}
-
-%%%%%%% ESTILOS DE TÍTULOS %%%%%%%
-
-% --- CHAPTER ---
-\titleformat{name=\chapter,numberless}[display]
-  {\normalfont\Huge\bfseries}
-  {}
-  {0pt}
-  {\centering}
-
-\titleformat{\chapter}[display]
-  {\normalfont\bfseries\color{myblue}}
-  {
-    \filleft\hspace*{-60pt}
-    \rotatebox[origin=c]{90}{
-      \normalfont\color{black}\large
-        \textls[180]{\textsc{\chaptertitlename}}
-    }\hspace{10pt}
-    {\setlength\fboxsep{0pt}
-    \colorbox{myblue}{\parbox[c][3cm][c]{2.5cm}{
-      \centering\color{white}\fontsize{80}{90}\selectfont\thechapter}
-    }}
-  }
-  {10pt}
-  {\raggedleft\LARGE\sffamily}
-
-% --- PART ---
-\titleclass{\part}{top} % Asegura comportamiento correcto
-\titleformat{\part}[display]
-  {\centering\normalfont\Huge\bfseries}
-  {
-    \color{myblue}
-    \fontsize{40}{50}\selectfont 
-    \textsc{\partname} \thepart
-  }
-  {20pt}
-  {\titlerule[1pt]\vspace{10pt}\Huge\color{black}}
-
-% Quitar cabecera y pie en la página de título de la Parte
-\assignpagestyle{\part}{empty}
-
-
-%%%%%%% HEADER AND FOOTER %%%%%%%
-\pagestyle{fancy}
-
-\setlength{\headheight}{41pt} 
-\setlength{\footskip}{20pt}
-
-\fancyhf{}
-\fancyhead[L]{{\bfseries\NombreAsignatura}}
-\fancyhead[R]{\includegraphics[width=0.25\textwidth]{images/logo-uib.png}}
-\fancyfoot[C]{\thepage}
-
-\fancypagestyle{plain}{
-    \pagestyle{fancy}
-    \fancyhf{}
-    \fancyhead[L]{{\bfseries\NombreAsignatura}}
-    \fancyhead[R]{\includegraphics[width=0.25\textwidth]{images/logo-uib.png}}
-    \fancyfoot[C]{\thepage}
-}
 
 %%%%%%% CONFIGURACIÓN DE CÓDIGO %%%%%%%
 

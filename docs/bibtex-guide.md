@@ -4,6 +4,8 @@ Esta guía explica cómo organizar y emplear archivos `.bib` para citar siguiend
 
 ---
 
+> **Estándar del proyecto:** Mantener todas las referencias en un único fichero `Bibliografia.bib` en la raíz del repositorio. Las secciones siguientes incluyen alternativas, pero la configuración por defecto usa el fichero central `Bibliografia.bib`.
+
 ## 1. ¿Qué es un fichero `.bib`?
 
 Un archivo `.bib` es una base de datos de referencias en formato BibTeX. Cada entrada tiene un identificador (clave) y un tipo (`@article`, `@book`, `@inproceedings`, etc.) con campos (autor, título, año...). La herramienta que formatea la bibliografía (por ejemplo `IEEEtran.bst` o `biblatex`+`biber`) convierte estas entradas en la sección de referencias del documento.
@@ -56,15 +58,15 @@ Motivos para dividir en varios `.bib`:
 - Mantener un archivo por capítulo facilita la colaboración y la reutilización.
 - Separar referencias primarias de secundarias, o bibliografía de anexos.
 
-Formas de usar varias bases:
+Formas de usar varias bases (nota: el proyecto usa `Bibliografia.bib` por defecto):
 - Con BibTeX tradicional y `IEEEtran.bst`: en `main.tex` ponga
 
 ```tex
 \bibliographystyle{IEEEtran}
-\bibliography{references,refs/cap1,refs/cap2}
+\bibliography{Bibliografia}
 ```
 
-(La lista separada por comas sin extensiones — `references.bib` y `refs/cap1.bib`).
+(Si se emplearan ficheros por capítulo, se listarían separados por comas sin extensión; en este proyecto preferimos mantener todo en `Bibliografia.bib`.)
 
 - Con `biblatex` + `biber` (más flexible), registre recursos con `\addbibresource{refs/cap1.bib}` y use secciones/filtrado para bibliografías por capítulo.
 
@@ -105,9 +107,9 @@ contents/
       Cap2.bib
 ```
 
-Con BibTeX tradicional puedes listar los `.bib` en `\bibliography{...}` (sin `.bib`), p. ej.: `\bibliography{references,contents/Parte1/Capitulo1/Ejemplo}`.
+Con BibTeX tradicional puedes listar los `.bib` en `\bibliography{...}` (sin `.bib`), p. ej. en este proyecto: `\bibliography{Bibliografia}`.
 
-Con `biblatex` puedes usar `\addbibresource{contents/Parte1/Capitulo1/Ejemplo.bib}` y, si usas `refsection=chapter`, imprimir la bibliografía local por capítulo.
+Con `biblatex` puedes usar `\addbibresource{Bibliografia.bib}` y, si optas por bibliografías por sección, usar `refsection=chapter`.
 
 ## 8. Cómo citar en el texto (IEEE)
 - Use `\cite{clave}` para obtener citas numéricas entre corchetes: `[1]`.
