@@ -1,0 +1,470 @@
+\chapter{Análisis}
+\label{chap:analisis}
+
+\section{Interesados}
+\subsection{Usuarios}
+Se han identificado dos tipos de usuarios principales para la aplicación: los gestores de proyectos y los miembros del equipo de proyecto. Ambos tipos de usuarios son agrupados bajo el término genérico de "usuario", ya que ambos interactúan con la aplicación, aunque con diferentes objetivos y necesidades.
+
+\textbf{Gestores:} Son los usuarios encargados de la dirección y supervisión del proyecto. Tienen visión global del proyecto. A nivel de rol, puede ser un \ac{PM} tradicional, pero también puede ser un rol de liderazgo técnico (Tech Lead, Product Owner, Arquitecto de Software, etc.) que asuma responsabilidades de gestión de proyecto.
+
+\textbf{Miembros del equipo:} Son los usuarios encargados de la ejecución de las tareas del proyecto. Su interés principal en la aplicación es que el overhead de gestión sea mínimo, y que les permita centrarse en su trabajo. A nivel de rol, pueden ser desarrolladores, diseñadores, analistas, incluso agentes de \ac{IA} que colaboren en el proyecto.
+
+\subsection{Stakeholders?}
+
+\section{Especificación funcional}
+La especificación de los requisitos funcionales se ha realizado con la técnica de historias de usuario, que permite describir las funcionalidades de la aplicación desde la perspectiva del usuario final. Cada historia de usuario se ha formulado siguiendo el formato:
+\begin{center}
+``Como \textbf{\textit{[tipo de usuario]}}, quiero \textbf{\textit{[funcionalidad]}} para \textbf{\textit{[beneficio]}}.''
+\end{center}
+
+Además, cada historia de usuario se ha priorizado utilizando la técnica MoSCoW, que clasifica las funcionalidades en Must Have (imprescindibles), Should Have (deseables), Could Have (interesantes) y Won't Have (no necesarias).
+
+También se han organizado las historias de usuario en \emph{épicas}, que agrupan funcionalidades relacionadas entre sí.
+
+\begingroup
+\renewcommand{\arraystretch}{1.3}
+
+\begin{longtable}{|p{1.5cm}|p{9cm}|p{3cm}|}
+\caption{Historias de usuario}\label{tab:historias}\\
+
+\hline
+\textbf{ID} & \textbf{Historia} & \textbf{Prioridad} \\
+\hline
+
+\endfirsthead
+
+\multicolumn{3}{|c|}{\textbf{Tabla \thetable{} -- continuación}} \\
+\hline
+\textbf{ID} & \textbf{Historia} & \textbf{Prioridad} \\
+\hline
+\endhead
+
+\hline
+\multicolumn{3}{|r|}{Continúa en la siguiente página} \\
+\hline
+\endfoot
+
+\hline
+\endlastfoot
+
+\multicolumn{3}{|l|}{\cellcolor{gray!15}\textbf{Épica 1: Identidad y acceso}} \\
+\hline
+
+HU-01 &
+\textbf{Como} usuario, \textbf{quiero} registrarme mediante OAuth
+(Google, Microsoft, Facebook, X)
+\textbf{para} acceder a mi espacio de trabajo de forma segura sin gestionar nuevas contraseñas.
+& Must Have \\
+\hline
+
+\multicolumn{3}{|l|}{\cellcolor{gray!15}\textbf{Épica 2: Organización}} \\
+\hline
+
+HU-02 &
+\textbf{Como} gestor, \textbf{quiero} crear una organización que agrupe proyectos y usuarios
+\textbf{para} centralizar la gestión de mi empresa o grupo de trabajo en un solo lugar.
+& Should Have \\
+\hline
+
+HU-03 &
+\textbf{Como} gestor, \textbf{quiero} definir roles y permisos de la organización
+\textbf{para} permitir a ciertos usuarios diferentes acciones sobre los proyectos de la organización.
+& Should Have \\
+\hline
+
+\multicolumn{3}{|l|}{\cellcolor{gray!15}\textbf{Épica 3: Configuración de proyectos}} \\
+\hline
+
+HU-04 &
+\textbf{Como} gestor, \textbf{quiero} crear proyectos dentro de una organización o de forma independiente
+\textbf{para} organizar el trabajo en diferentes iniciativas o clientes.
+& Must Have \\
+\hline
+
+HU-05 &
+\textbf{Como} gestor, \textbf{quiero} poder configurar nombre, abreviación y privacidad de los proyectos
+\textbf{para} gestionar el acceso y la visibilidad de la información del proyecto.
+& Must Have \\
+\hline
+
+HU-06 &
+\textbf{Como} gestor, \textbf{quiero} definir permisos y roles a nivel de proyecto
+\textbf{para} controlar el acceso a la información y funcionalidades del proyecto.
+& Must Have \\
+\hline
+
+HU-07 &
+\textbf{Como} gestor, \textbf{quiero} invitar a usuarios a un proyecto
+\textbf{para} colaborar con mi equipo en la gestión del proyecto.
+& Must Have \\
+\hline
+
+HU-08 &
+\textbf{Como} gestor, \textbf{quiero} clonar un proyecto existente
+\textbf{para} reutilizar la estructura y configuración de un proyecto anterior como plantilla en un nuevo proyecto.
+& Could Have \\
+\hline
+
+HU-09 &
+\textbf{Como} gestor, \textbf{quiero} añadir campos personalizados a los elementos de trabajo del proyecto
+\textbf{para} adaptar la gestión del proyecto a las necesidades específicas de mi equipo o proyecto.
+& Should Have \\
+\hline
+
+\multicolumn{3}{|l|}{\cellcolor{gray!15}\textbf{Épica 4: Elementos de Trabajo}} \\
+\hline
+
+HU-10 &
+\textbf{Como} usuario, \textbf{quiero} crear y gestionar elementos de trabajo 
+\textbf{para} organizar y seguir el progreso de las tareas dentro de un proyecto.
+& Must Have \\
+\hline
+
+HU-11 &
+\textbf{Como} usuario, \textbf{quiero} que los elementos de trabajo tengan un set de campos predefinidos (título, descripción, estado, responsable, etiquetas, etc.)
+\textbf{para} facilitar la organización y seguimiento de las tareas dentro de un proyecto.
+& Must Have \\
+\hline
+
+HU-12 &
+\textbf{Como} usuario, \textbf{quiero} poder dividir el trabajo en elemento de trabajo más pequeños (subtareas)
+\textbf{para} gestionar tareas complejas dividiéndolas en partes más manejables
+y asignar diferentes responsables a cada parte.
+& Must Have \\
+\hline
+
+HU-13 &
+\textbf{Como} miembro del equipo, \textbf{quiero} poder añadir comentarios a los elementos de trabajo y ver un historial de cambios
+\textbf{para} facilitar la comunicación y colaboración entre los miembros del equipo, y mantener un registro de las decisiones relacionadas con cada tarea.
+& Should Have \\
+\hline
+
+\multicolumn{3}{|l|}{\cellcolor{gray!15}\textbf{Épica 5: Notificaciones}} \\
+\hline
+
+HU-14 &
+\textbf{Como} usuario, \textbf{quiero} recibir notificaciones sobre eventos que me afecten (asignación de tareas, cambios en tareas asignadas, menciones, etc.)
+\textbf{para} mantenerme informado sobre el progreso del proyecto y las tareas que me afectan.
+& Should Have \\
+\hline
+
+HU-15 &
+\textbf{Como} usuario, \textbf{quiero} recibir notificaciones cuando se hace una solicitud de aprobación de una acción que requiera mi aprobación
+\textbf{para} poder desbloquear el trabajo de otros miembros del equipo.
+& Should Have \\
+\hline
+
+\multicolumn{3}{|l|}{\cellcolor{gray!15}\textbf{Épica 6: Chats y agentes}} \\
+\hline
+
+HU-16 &
+\textbf{Como} usuario, \textbf{quiero} poder tener chats, tanto con otros usuariones como con agentes de \ac{IA}
+\textbf{para} facilitar la comunicación y colaboración entre los miembros del equipo.
+& Should Have \\
+\hline
+
+HU-17 &
+\textbf{Como} usuario, \textbf{quiero} poder crear agentes de \ac{IA} que me ayuden en la gestión del proyecto y tengan un rol específico
+\textbf{para} automatizar tareas repetitivas, obtener resúmenes de información relevante, o recibir sugerencias para la gestión del proyecto.
+& Should Have \\
+\hline
+
+HU-18 &
+\textbf{Como} gestor, \textbf{quiero} que los agentes de \ac{IA} puedan realizar acciones dentro de la aplicación (crear elementos de trabajo, asignar tareas, enviar notificaciones, etc.)
+\textbf{para} automatizar tareas y procesos dentro de la gestión del proyecto.
+& Should Have \\
+\hline
+
+HU-19 &
+\textbf{Como} gestor, \textbf{quiero} tener un agente de \ac{IA} predefinido \emph{Daily Standup} \textbf{para} recibir un resumen diario del estado del proyecto, incluyendo tareas pendientes, bloqueos, y progreso general.
+& Could Have \\
+\hline
+
+HU-20 &
+\textbf{Como} gestor, \textbf{quiero} tener un agente de \ac{IA} predefinido \emph{Desglose de Trabajo} \textbf{para} poder introducir una tarea compleja y recibir una propuesta de desglose en subtareas más manejables.
+& Could Have \\
+\hline
+
+\multicolumn{3}{|l|}{\cellcolor{gray!15}\textbf{Épica 7: Visualización en Árbol}} \\
+\hline
+
+\multicolumn{3}{|p{\dimexpr\linewidth-2\tabcolsep-2\arrayrulewidth\relax}|}{
+Tras investigar diferentes opciones para mostrar el estado del proyecto de forma visual, se ha decidido implementar una vista en árbol que permita visualizar la estructura del proyecto y el progreso de cada elemento.
+} \\
+\hline
+
+HU-21 &
+\textbf{Como} usuario, \textbf{quiero} visualizar el proyecto como un grafo donde los elements de trabajo son nodos y las dependencias son conexiones \textbf{para} entender la estructura jerárquica y el orden de ejecución sin entrar al detalle de cada elemento de trabajo.
+& Must Have \\
+\hline
+
+HU-22 &
+\textbf{Como} usuario, \textbf{quiero} identificar el tipo de trabajo por la forma del nodo y su esfuerzo estimado por el tamaño \textbf{para} distinguir rápidamente \emph{features} complejas de tareas pequeñas sin leer.
+& Must Have \\
+\hline
+
+HU-23 &
+\textbf{Como} usuario, \textbf{quiero} identificar el avance de cada elemento de trabajo por el relleno del nodo \textbf{para} conocer rápidamente el progreso.
+& Must Have \\
+\hline
+
+HU-24 &
+\textbf{Como} usuario, \textbf{quiero} ver visualmente cuanto esfuerzo se ha dedicado a un elemento de trabajo respecto a lo planificado \textbf{para} detectar rápidamente desvianciones y poder actuar en consecuencia.
+& Must Have \\
+\hline
+
+HU-25 &
+\textbf{Como} usuario, \textbf{quiero} ver en que estado se encuentra un elemento de trabajo mediante su color \textbf{para} coordinarme con el equipo y saber rápidamente si un elemento de trabajo está bloqueado, en progreso, o completado.
+& Must Have \\
+\hline
+
+HU-26 &
+\textbf{Como} usuario, \textbf{quiero} ver quién tiene asignado un elemento de trabajo \textbf{para} coordinarme con el equipo.
+& Must Have \\
+\hline
+
+HU-27 &
+\textbf{Como} usuario, \textbf{quiero} poder minimizar partes del árbol de trabajo \textbf{para} enfocarme en las partes del proyecto que me interesen sin perder la visión global.
+& Must Have \\
+\hline
+
+\multicolumn{3}{|l|}{\cellcolor{gray!15}\textbf{Épica 8: Perfil}} \\
+\hline
+
+HU-28 &
+\textbf{Como} usuario, \textbf{quiero} tener un perfil personal indicando mi rol y zona horaria
+\textbf{para} que otros usuarios puedan conocer mi rol en los proyectos y para que las notificaciones se ajusten a mi zona horaria.
+& Could Have \\
+\hline
+
+HU-29 &
+\textbf{Como} usuario, \textbf{quiero} acumular experiencia en diferentes áreas 
+\textbf{para} que gestores y agentes de \ac{IA} puedan recomendarme tareas o proyectos en función de mi experiencia y habilidades.
+& Could Have \\
+\hline
+
+HU-30 &
+\textbf{Como} usuario, \textbf{quiero} que mi perfil contenga un indicador de calidad técnica
+\textbf{para} que los gestores y agentes de \ac{IA} puedan tener en cuenta no solo mi experiencia, sino también la calidad de mis contribuciones.
+& Could Have \\
+\hline
+
+HU-31 &
+\textbf{Como} usuario, \textbf{quiero} que mi perfil contenga  un indicador de la velocidad a la que suelo completar tareas
+\textbf{para} que los gestores y agentes de \ac{IA} puedan asignarme tareas teniendo en cuenta no solo mi experiencia y calidad, sino también mi velocidad de trabajo.
+& Could Have \\
+\hline
+
+HU-32 &
+\textbf{Como} usuario, \textbf{quiero} que mi perfil contenga un indicador de mi sesgo de optimismo/pesimismo en la estimación de tareas
+\textbf{para} que los gestores y agentes de \ac{IA} puedan ajustar las estimaciones de las tareas que me asignen teniendo en cuenta mi sesgo de optimismo/pesimismo.
+& Could Have \\
+\hline
+
+\end{longtable}
+\endgroup
+
+
+\section{Especificación no funcional}
+Así mismo, se han identificado los requisitos no funcionales que rigen las restricciones, cualidades y atributos de calidad globales del sistema. Estos requisitos son críticos para garantizar el correcto funcionamiento, la robustez y la viabilidad práctica de la aplicación, abarcando dimensiones esenciales como la seguridad, el rendimiento, la escalabilidad, la disponibilidad, la mantenibilidad y la usabilidad.
+
+\textbf{Seguridad:} 
+\begin{itemize}
+    \item \textbf{Autenticación estandarizada:} El control de acceso a la plataforma debe gestionarse mediante un sistema de autenticación seguro basado en los estándares industriales OAuth 2.0\cite{rfc6749}.
+    \item \textbf{Control de acceso granular:} La protección de los datos e información sensible de las organizaciones y proyectos debe garantizarse mediante un modelo de control de acceso basado en roles (RBAC), aplicando restricciones jerárquicas tanto a nivel global de la organización como a nivel específico de cada proyecto.
+    \item \textbf{Gestión de sesiones:} Las sesiones de los usuarios deben expirar automáticamente tras un periodo preconfigurado de inactividad y ofrecer la capacidad de revocar de forma remota e instantánea cualquier sesión activa en caso de compromiso de la cuenta.
+\end{itemize}
+
+\textbf{Rendimiento:}
+\begin{itemize}
+    \item \textbf{Tiempo de respuesta de la API:} El tiempo medio de respuesta del servidor para operaciones síncronas de lectura y escritura de datos debe mantenerse por debajo de los 300~ms para el 95\% de las solicitudes (percentil 95) bajo condiciones normales de carga.
+    \item \textbf{Procesamiento asíncrono de IA:} Las tareas con alta carga computacional, tales como la generación de resúmenes por parte de agentes de \ac{IA} o el desglose automatizado de elementos de trabajo complejos, deben procesarse de manera asíncrona, notificando al usuario el inicio del proceso.
+    \item \textbf{Fluidez de la interfaz (Vista en árbol):} El motor de renderizado en el cliente debe asegurar una tasa de refresco fluida y cercana a los 60~fotogramas por segundo (fps) durante la interacción visual y la manipulación del grafo de tareas, minimizando el impacto del re-renderizado en proyectos complejos de hasta 500 elementos concurrentes.
+\end{itemize}
+
+\textbf{Escalabilidad:}
+\begin{itemize}
+    \item \textbf{Escalado horizontal:} La arquitectura del sistema debe permitir el escalado horizontal independiente de sus componentes (servicios de aplicación, pasarelas de agentes de \ac{IA} y bases de datos), facilitando el aislamiento de cargas de trabajo intensivas sin degradar el núcleo de la aplicación.
+    \item \textbf{Concurrencia del sistema:} El sistema debe ser capaz de manejar de forma eficiente hasta 1000 usuarios concurrentes activos y soportar picos de carga de hasta 100 operaciones por segundo sin experimentar una degradación perceptible en los tiempos de respuesta.
+\end{itemize}
+
+\textbf{Disponibilidad:}
+\begin{itemize}
+    \item \textbf{Tiempo de actividad (Uptime):} La aplicación debe garantizar una disponibilidad continua del 99.9\% del tiempo, excluyendo exclusivamente las ventanas de tiempo previamente notificadas para tareas de mantenimiento programado.
+    \item \textbf{Tolerancia a fallos:} El sistema debe implementar mecanismos de recuperación automática y aislamiento de fallos, tales como políticas de reintentos, para mitigar caídas de servicios externos o de las APIs de proveedores de \ac{IA}.
+\end{itemize}
+
+\textbf{Mantenibilidad:}
+\begin{itemize}
+    \item \textbf{Arquitectura desacoplada:} El diseño del código fuente debe seguir un patrón arquitectónico modular, desacoplado y de alta cohesión (como la arquitectura hexagonal o limpia\cite{martin2017clean}), separando estrictamente la lógica del dominio de los detalles de infraestructura para facilitar su comprensión, mantenimiento y extensión.
+    \item \textbf{Cobertura de pruebas:} Las capas de la aplicación que albergan las reglas de negocio y los casos de uso centrales deben contar con una cobertura de pruebas unitarias automatizadas de al menos un 80\%.
+    \item \textbf{Inyección de configuración:} Todos los parámetros operativos, variables de entorno, credenciales de servicios externos e hiperparámetros de los modelos de \ac{IA} deben estar completamente externalizados del código fuente, permitiendo modificaciones en caliente sin necesidad de recompilar o redesplegar la aplicación.
+    \item \textbf{Análisis estático obligatorio:} El flujo de integración continua (\ac{CI}) debe requerir la superación obligatoria de un análisis estático de código para garantizar los estándares de calidad del software, el control de la complejidad ciclomática y la ausencia de deuda técnica crítica antes de cada despliegue.
+\end{itemize}
+
+\textbf{Usabilidad:}
+\begin{itemize}
+    \item \textbf{Heurísticas de diseño:} La interfaz de usuario deberá cumplir con los criterios de usabilidad validados mediante una evaluación heurística basada en los 10 principios de Nielsen y Molich~\cite{nielsen1990heuristic}.
+    \item \textbf{Accesibilidad web:} La aplicación debe observar las directrices esenciales de accesibilidad web, asegurando relaciones de contraste cromático adecuadas en los nodos del árbol de tareas y el soporte para la navegación y operación mediante teclado en los formularios principales~\cite{w3c2018wcag21}.
+\end{itemize}
+
+\section{Lenguaje ubicuo}
+
+Siguiendo los principios del \ac{DDD}\cite{evans2004ddd}, se ha definido un lenguaje ubicuo que unifica la terminología utilizada por los desarrolladores y los usuarios, facilitando la comunicación y el entendimiento mutuo entre ambos grupos. Este lenguaje se ha construido a partir de los términos y conceptos más relevantes para la gestión de proyectos, y se ha utilizado de forma consistente en toda la documentación, los diagramas y el código fuente de la aplicación.
+
+\begin{description}
+    \item[Organización:] Entidad principal que agrupa a múltiples usuarios y proyectos bajo un mismo espacio de trabajo, centralizando la gestión de permisos y roles a nivel corporativo o de grupo.
+    \item[Proyecto:] Iniciativa de trabajo acotada que contiene un conjunto estructurado de elementos de trabajo orientados a un objetivo común.
+    \item[Miembro del Equipo:] Entidad asignada a un proyecto para colaborar en su ejecución. Un miembro del equipo puede ser tanto un usuario humano (desarrollador, diseñador) como un Agente de \ac{IA}.
+    \item[Gestor:] Rol encargado de la configuración, supervisión y administración de proyectos y organizaciones.
+    \item[Agente de \ac{IA}:] Miembro del equipo automatizado que colabora en el proyecto. Actúa bajo un rol específico y tiene capacidad para interactuar con el sistema de manera análoga a un usuario humano.
+    \item[Elemento de Trabajo (\emph{Work Item}):] Unidad básica de gestión dentro de un proyecto. Representa una tarea, funcionalidad o incidencia, y encapsula información como estado, responsable, esfuerzo estimado y dependencias.
+    \item[Subtarea:] Elemento de trabajo que se deriva o desglosa de un elemento de trabajo padre más complejo, estableciendo una relación jerárquica.
+    \item[Árbol de Trabajo:] Representación visual, jerárquica e interactiva del conjunto de elementos de trabajo de un proyecto en forma de grafo.
+    \item[Nodo:] Representación gráfica de un único Elemento de Trabajo dentro del Árbol de Trabajo. Sus atributos visuales (forma, tamaño, color y relleno) comunican instantáneamente el tipo de trabajo, el esfuerzo estimado, el estado y el avance.
+    \item[Estado:] Situación operativa actual de un elemento de trabajo en su ciclo de vida (pendiente, en progreso, bloqueado, completado).
+    \item[Rol:] Conjunto de responsabilidades y nivel de autoridad asignado a un Miembro del Equipo  dentro de una Organización o Proyecto. Define qué acciones puede realizar en el sistema.
+    \item[Permiso:] Autorización explícita y granular para ejecutar una acción específica o acceder a un recurso concreto (ej. crear proyecto, invitar usuario, modificar elemento de trabajo). Los permisos se agrupan conformando un Rol.
+    \item[Campo Personalizado:] Atributo dinámico definido para extender la información predefinida de los Elementos de Trabajo, adaptándolos a las necesidades específicas de un proyecto.
+    \item[Aprobación:] Petición formal generada dentro del ciclo de vida de una acción que requiere la validación explícita de un usuario con los permisos adecuados para desbloquear el progreso.
+\end{description}
+
+\section{Modelo de Datos}
+Siguiendo el enfoque de \ac{DDD}\cite{evans2004ddd}, se ha diseñado un modelo de datos que refleja fielmente el dominio de la aplicación. Este modelo se ha estructurado en torno a las entidades principales del dominio, utilizando un enfoque orientado a objetos, no obstante se ha optado por una representación relacional para su implementación en la base de datos mediante \ac{MER}\cite{chen1976entity}.
+
+Dado la complejidad del modelo de datos, se ha optado por dividirlo en varios diagramas por módulos o \emph{bounded contexts} para facilitar su comprensión y mantenimiento.
+
+\subsection{Modelo de Usuarios y Identidad}
+Este módulo es responsable de gestionar la información relacionada con los usuarios, su autenticación y sus estadísticas. Incluye las entidades:
+\begin{itemize}
+    \item \textbf{\emph{refresh\_tokens}:} Almacena los tokens de refresco generados para los usuarios, es importante persistirlos para poder invalidarlos en caso de compromiso de la cuenta.
+    \item \textbf{\emph{users}:} Almacena la información básica de los usuarios, como su nombre, correo electrónico, rol y zona horaria.
+    \item \textbf{\emph{profile\_images}:} Almacena información sobre las imágenes de perfil de los usaurios como su URL y metadatos asociados.
+    \item \textbf{\emph{skill\_types}:} Almacena los tipos de habilidades que puede tener un usuario (lenguajes, metodologías, herramientas, etc.)
+    \item \textbf{\emph{skills}:} Almacena las habilidades disponibles en el sistema, asociadas a un tipo de habilidad.
+    \item \textbf{\emph{user\_skill\_metrics}:} Tabla intermedia que asocia a cada usuario con sus habilidades y contiene métricas como experiencia, calidad, velocidad y sesgo de predicción.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-users.png}
+    \caption{\ac{MER} del módulo de Usuarios e Identidad}
+    \label{fig:mer_usuarios}
+\end{figure}
+
+\subsection{Módulo de Organizaciones}
+Este módulo gestiona la información relacionada con las organizaciones, sus miembros y roles. Incluye las entidades:
+\begin{itemize}
+    \item \textbf{\emph{organizations}:} Almacena la información básica de las organizaciones, como su nombre, descripción y website.
+    \item \textbf{\emph{organization\_invitations}:} Almacena las invitaciones enviadas a usuarios para unirse a una organización, incluyendo el estado de la invitación. Los miembros activos de la organización, son los que tienen una invitación en estado aceptada.
+    \item \textbf{\emph{organization\_roles}:} Almacena los roles definidos a nivel de organización, como Administrador, Gestor, Miembro, etc.
+    \item \textbf{\emph{organization\_permissions}:} Almacena los permisos de organización disponibles en el sistema, como Crear Proyecto, Invitar Usuario, etc.
+    \item \textbf{\emph{organization\_role\_permissions}:} Tabla intermedia que asocia los roles de organización con sus permisos correspondientes y su nivel sobre estos permisos.
+    \item \textbf{\emph{user\_readmodels}:} Almacena información de lectura específica de los usuarios dentro del contexto de una organización. Sigue el patrón \ac{CQRS}\cite{fowler2007cqrs} que se detallará más adelante en el diseño de la arquitectura.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-organizations.png}
+    \caption{\ac{MER} del módulo de Organizaciones}
+    \label{fig:mer_organizaciones}
+\end{figure}
+
+\subsection{Módulo de Proyectos}
+Este módulo gestiona la información relacionada con los proyectos, sus miembros, roles, elementos de trabajo y otras configuraciones específicas de cada proyecto. Incluye las entidades:
+\begin{itemize}
+    \item \textbf{\emph{projects}:} Almacena la información básica de los proyectos, como su nombre, abreviación, privacidad, etc.
+    \item \textbf{\emph{organization\_readmodels}:} Almacena información de lectura de las organizaciones para conocer la relación entre proyectos y organizaciones.
+    \item \textbf{\emph{user\_readmodels}:} Almacena información de lectura de los usuarios para conocer su relación con los proyectos. Aquí encontramos un polimorfismo ya que un proyecto puede pertenecer a una organización o a un usuario de forma independiente.
+    \item \textbf{\emph{agent\_readmodels}:} Almacena información de lectura de los agentes de \ac{IA} para conocer los pertenecientes a un proyecto y su rol dentro de este.
+    \item \textbf{\emph{project\_invitations}:} Almacena las invitaciones para unirse a un proyecto, los miembros activos de un proyecto son los que tienen una invitación en estado aceptada. Aquí también encontramos un polimorfismo ya que se pueden invitar tanto usuarios humanos como agentes de \ac{IA}.
+    \item \textbf{\emph{project\_roles}:} Almacena los roles definidos a nivel de proyecto, como Gestor, Desarrollador, etc.
+    \item \textbf{\emph{project\_permissions\_groups}:} Almacena los grupos de permisos de proyecto disponibles en el sistema, unicamente se han definido para diferenciar visualmente los permisos que afectan a la gestión del proyecto de los que afectan a la gestión de los elementos de trabajo.
+    \item \textbf{\emph{project\_permissions}:} Almacena los permisos de proyecto disponibles en el sistema, como Configurar Proyecto, Crear Elemento de Trabajo, etc.
+    \item \textbf{\emph{project\_role\_permissions}:} Tabla intermedia que asocia los roles de proyecto con sus permisos correspondientes y su nivel sobre estos permisos.
+    \item \textbf{\emph{field\_types}:} Almacena los tipos de campos personalizados disponibles en el sistema, como texto, número, fecha, etc.
+    \item \textbf{\emph{fields}:} Almacena los campos personalizados de los proyectos, incluyendo su tipo y nombre.
+    \item \textbf{\emph{project\_fields}:} Tabla intermedia que asocia los campos personalizados con los proyectos a los que pertenecen.
+    \item \textbf{\emph{options}:} Almacena las opciones de los campos personalizados de tipo selección, incluyendo su valor y su contenido.
+    \item \textbf{\emph{work\_item\_type\_readmodels}:} Almacena información de lectura de los tipos de elementos de trabajo, para poder relacionarlos con los campos personalizados.
+    \item \textbf{\emph{field\_applies}:} Tabla intermedia que asocia los campos personalizados con los tipos de elementos de trabajo a los que aplican.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-projects.png}
+    \caption{\ac{MER} del módulo de Proyectos}
+    \label{fig:mer_proyectos}
+\end{figure}
+
+\subsection{Módulo de Elementos de Trabajo}
+Este módulo gestiona la información relacionada con los elementos de trabajo, sus estados, responsables etc. Incluye las entidades:
+
+\begin{itemize}
+    \item \textbf{\emph{work\_items}:} Almacena la información de los elementos de trabajo, como su título, descripción, código, estimación, progreso, etc. Estos son los campos indispensables considerados el núcleo, ya que afectan a la forma de representar los nodos en el árbol de trabajo. Destaca una relación recursiva que permite representar la jerarquía de elementos de trabajo y subtareas.
+    \item \textbf{\emph{project\_readmodels}:} Almacena información de lectura de los proyectos para conocer a qué proyecto pertenece un elemento de trabajo.
+    \item \textbf{\emph{skill\_readmodels}:} Almacena información de lectura de las habilidades para conocer las habilidades requeridas por un elemento de trabajo.
+    \item \textbf{\emph{skill\_work\_items}:} Tabla intermedia que asocia las habilidades con los elementos de trabajo a los que requieren con sus estadísticas calculadas.
+    \item \textbf{\emph{field\_readmodels} y \emph{field\_type\_readmodels}:} Almacenan información de lectura de los campos personalizados y sus tipos para conocer los campos personalizados que tiene un elemento de trabajo.
+    \item \textbf{\emph{field\_values}:} Almacena los valores de los campos personalizados de cada elemento de trabajo.
+    \item \textbf{\emph{work\_item\_status}:} Almacena los estados de los elementos de trabajo definidos en el sistema.
+    \item \textbf{\emph{work\_item\_types}: } Almacena los tipos de elementos de trabajo definidos en el sistema.
+    \item \textbf{\emph{user\_readmodels}:} Almacena información de lectura de los usuarios para conocer quién tiene asignado un elemento de trabajo y otros datos como quién hace comentarios o registra trabajo realizado.
+    \item \textbf{\emph{attachments}:} Almacena la información de los archivos adjuntos a los elementos de trabajo ya sea en su descripción o en los comentarios, incluyendo su URL y metadatos asociados.
+    \item \textbf{\emph{work\_item\_comments}:} Almacena los comentarios realizados en los elementos de trabajo, incluyendo el autor, el contenido y la fecha de creación.
+    \item \textbf{\emph{work\_logs}:} Almacena los registros de trabajo realizados en los elementos de trabajo, incluyendo el usuario que realizó el registro, la cantidad de tiempo registrado y la fecha del registro.
+    \item \textbf{\emph{activity\_logs}:} Almacena un historial de cambios y eventos relacionados con los elementos de trabajo, como cambios de estado, reasignaciones, actualizaciones de campos, etc.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-work-items.png}
+    \caption{\ac{MER} del módulo de Elementos de Trabajo}
+    \label{fig:mer_elementos_trabajo}
+\end{figure}
+
+\subsection{Módulo de Chats}
+Este módulo gestiona la información relacionada con los chats entre usuarios y agentes de \ac{IA}. Incluye las entidades:
+
+\begin{itemize}
+    \item \textbf{\emph{chats}:} Almacena la información básica de los chats, como su identificador y fecha de creación. 
+    \item \textbf{\emph{chat\_participants}:} Tabla intermedia que asocia los chats con sus participantes, ya sean usuarios humanos o agentes de \ac{IA}.
+    \item \textbf{\emph{chat\_messages}:} Almacena los mensajes enviados en los chats, incluyendo el autor, el contenido, la fecha de envío y su estado (enviado, entregado, leído).
+    \item \textbf{\emph{user\_readmodels}:} Almacena información de lectura de los usuarios para conocer su participación en los chats.
+    \item \textbf{\emph{agent\_readmodels}:} Almacena información de lectura de los agentes de \ac{IA} para conocer su participación en los chats.
+    \item \textbf{\emph{project\_readmodels}:} Almacena información de lectura de los proyectos para conocer a qué proyecto pertenece un agente.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-chats.png}
+    \caption{\ac{MER} del módulo de Chats}
+    \label{fig:mer_chats}
+\end{figure}
+
+\subsection{Módulo de Agentes}
+Este módulo gestiona la información relacionada con los agentes de \ac{IA} que colaboran en los proyectos. Incluye las entidades:
+
+\begin{itemize}
+    \item \textbf{\emph{project\_readmodels}:} Almacena información de lectura de los proyectos para conocer a qué proyecto pertenece un agente.
+    \item \textbf{\emph{model\_providers}:} Almacena los proveedores de modelos de \ac{IA} disponibles en el sistema, como OpenAI, Claude, etc. junto con sus tokens de \ac{API}.
+    \item \textbf{\emph{models}:} Almacena los modelos de \ac{IA} disponibles en el sistema, asociados a un proveedor de modelos con su descripción y precio por millón de tokens de entrada.
+    \item \textbf{\emph{agents}:} Almacena la información de los agentes de \ac{IA} creados en el sistema, incluyendo su nombre, instrucciones y \emph{system prompt}.
+    \item \textbf{\emph{model\_configs}:} Tabla intermedia que asocia los agentes de \ac{IA} con los modelos de \ac{IA} que utilizan, incluyendo la configuración específica del modelo (temperatura y máximo de tokens).
+    \item \textbf{\emph{agent\_templates}:} Almacena las plantillas de agentes de \ac{IA} predefinidos en el sistema, incluyendo su nombre, descripción e instrucciones. Ejemplos de plantillas pueden ser el agente \emph{Daily Standup} o el agente \emph{Desglose de Trabajo}.
+    \item \textbf{\emph{agent\_time\_triggers}:} Almacena los disparadores temporales configurados para los agentes de \ac{IA}, incluyendo la frecuencia de ejecución, zona horaria etc. Estos disparadores permiten configurar la ejecución automática de los agentes en función del tiempo, como por ejemplo ejecutar el agente \emph{Daily Standup} todos los días a las 9:00 am.
+    \item \textbf{\emph{agent\_event\_triggers}:} Almacena los disparadores de eventos configurados para los agentes de \ac{IA}, incluyendo el tipo de evento que los dispara (creación de elemento de trabajo, cambio de estado, etc.) y las condiciones específicas del evento. Estos disparadores permiten configurar la ejecución automática de los agentes en función de eventos específicos dentro del proyecto.
+    \item \textbf{\emph{agent\_executions}:} Representa una instancia de ejecución de un agente de \ac{IA}, que puede ser disparada mediante alguno de los disparadores definidos (mode: regular) o mediante un mensaje directo de un usuario (mode: direct query). Almacena información sobre la ejecución del agente, como su estado (pendiente, en progreso, completada, fallida y suspendida) y el \emph{payload} de entrada.
+    \item \textbf{\emph{agent\_execution\_messages}:} Almacena los mensajes generados durante la ejecución de un agente de \ac{IA}, incluyendo los mensajes del sistema, los mensajes de usuario y los mensajes generados por el agente. Estos mensajes permiten mantener un contexto completo de la ejecución del agente.
+    \item \textbf{\emph{agent\_execution\_pending\_events}:} Almacena los eventos de los que está pendiente una ejecución de un agente de \ac{IA} para poder reactivar la ejecución cuando se cumplan las condiciones del evento. Por ejemplo, si la ejecución de un agente está pendiente de la respuesta de un usuario para acabar su ejecución. Es importante no solo el tipo de evento esperado, sino el \emph{correlation\_id} del evento para poder asociarlo con la ejecución correcta.
+ \end{itemize}
+
+ \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-agents.png}
+    \caption{\ac{MER} del módulo de Agentes}
+    \label{fig:mer_agentes}
+\end{figure}
+
+\subsection{Modelo de Notificaciones}
+TODO
