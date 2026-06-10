@@ -362,7 +362,7 @@
 		}% Fi de put
 		\put(35,-170){%
 			\makebox(0,0)[lb]{%
-					\sffamily{Paraules clau del treball: \@paraulesclau}
+					\sffamily{Palabras clave del trabajo: \@paraulesclau}
 			}% Fi de makebox
 		}% Fi de put
 		\put(35,-208){%
