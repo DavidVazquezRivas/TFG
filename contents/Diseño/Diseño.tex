@@ -100,7 +100,7 @@ Para lograr una correcta separación de responsabilidades dentro de cada módulo
 En el contexto académico actual del proyecto, se ha tomado la decisión arquitectónica de establecer un entorno de despliegue pragmático y acotado. Desplegar una arquitectura distribuida en servicios \emph{cloud} de alta disponibilidad excedería los objetivos, el presupuesto y el marco temporal de esta fase de desarrollo. Por tanto, el patrón de despliegue se centra en la contenerización para asegurar un entorno de integración local robusto e idéntico para todos los evaluadores, combinado con un alojamiento estático para el cliente web de Leaftask.
 
 \subsection{Orquestación con Docker Compose}
-Para evitar el clásico problema de "funciona en mi máquina" y estandarizar la infraestructura necesaria para ejecutar el \emph{backend}, se ha contenerizado la aplicación utilizando Docker y orquestando los servicios mediante Docker Compose. 
+Para evitar el clásico problema de 'funciona en mi máquina' y estandarizar la infraestructura necesaria para ejecutar el \emph{backend}, se ha contenerizado la aplicación utilizando Docker y orquestando los servicios mediante Docker Compose. 
 
 Para el entorno de evaluación y producción, esta infraestructura se despliega íntegramente en un\ac{VPS} aprovisionado mediante los créditos académicos del programa \emph{Azure for Students}. Esta decisión permite disponer de los recursos de cómputo necesarios a coste cero, automatizando las actualizaciones del servidor mediante un flujo de \ac{CICD} gestionado con GitHub Actions.
 
