@@ -72,6 +72,35 @@
     keywordstyle=\color{myblue}\bfseries,
 }
 
+\lstdefinestyle{CSharp}{
+    language=[Sharp]C,
+    style=mystyle,
+    keywordstyle=\color{myblue}\bfseries,
+    morekeywords={
+        var, dynamic, async, await, yield, from, select, where, get, set,
+        value, add, remove, init, record, required, nameof
+    },
+    morecomment=[l]{//},
+    morecomment=[s]{/*}{*/},
+    morestring=[b]"
+}
+
+\lstdefinestyle{TypeScript}{
+    language=Java,
+    style=mystyle,
+    keywordstyle=\color{myblue}\bfseries,
+    morekeywords={
+        let, const, var, interface, type, enum, namespace,
+        async, await, from, import, export, default,
+        implements, extends, public, private, protected,
+        readonly, keyof, as, satisfies
+    },
+    morecomment=[l]{//},
+    morecomment=[s]{/*}{*/},
+    morestring=[b]",
+    morestring=[b]'
+}
+
 % XML
 \lstdefinestyle{xml}{
     language=XML,

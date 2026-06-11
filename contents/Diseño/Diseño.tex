@@ -201,6 +201,475 @@ El proceso completo, ilustrado en la Figura \ref{fig:sequence-auth}, se divide e
 \end{figure}
 
 \section{Patrones de diseño}
+Durante el desarrollo del código fuente, se ha aplicado de forma sistemática un conjunto de patrones de diseño orientados a objetos. Muchos de estos son los patrones clásicos de diseño de software \cite{gamma1994design}, proporcionan soluciones probadas y estandarizadas a problemas recurrentes de diseño de software. Su aplicación no solo resuelve retos técnicos de bajo nivel, sino que establece un vocabulario común y facilita la mantenibilidad, extensibilidad y legibilidad del código.
+
+Con el fin de estructurar su análisis, los patrones implementados se han clasificado en tres categorías fundamentales, de acuerdo con su propósito principal dentro de la arquitectura del sistema: patrones creacionales, estructurales y de comportamiento.
+
+\subsection{Patrones creacionales}
+Los patrones creacionales abstraen el proceso de instanciación de los objetos, ocultando la lógica de creación. En el contexto de la aplicación, se han aplicado diversas variantes de estos patrones adaptadas tanto al paradigma orientado a objetos del \emph{backend} como al paradigma funcional del \emph{frontend}.
+
+\subsubsection{Static Factory Method (Agregados de Dominio)}
+En el núcleo de la aplicación, siguiendo los principios del \ac{DDD}, se ha descartado el uso de constructores públicos para las Entidades y \emph{Aggregate Roots}. En su lugar, se ha implementado el patrón \emph{Static Factory Method}. 
+
+Este patrón define métodos estáticos de creación (\texttt{Create}) que actúan como el único punto de entrada válido para instanciar un objeto. Al mantener el constructor privado, se garantiza que no se puedan crear entidades en un estado inválido, permitiendo encapsular la validación de invariantes de negocio y la emisión del evento de dominio inicial en una única transacción atómica en memoria.
+
+\begin{lstlisting}[style=CSharp, caption={Implementación del patrón Static Factory Method en la entidad User.}, label={lst:factory_user}]
+public sealed class User : Entity
+{
+    // Constructor privado: impide la instanciacion directa y anula estados invalidos
+    private User(Guid id, string firstName, string lastName, string email) { ... }
+
+    // Factory Method estatico: Valida invariantes y emite el evento de dominio
+    public static User Create(string firstName, string lastName, string email)
+    {
+        User user = new(Guid.NewGuid(), firstName, lastName, email);
+        user.Raise(new UserCreatedDomainEvent(
+            user.Id, user.FirstName, user.LastName, user.Email));
+
+        return user;
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Factory (Desacoplamiento de Políticas)}
+Para la creación de objetos cuya inicialización depende de configuraciones externas o servicios de infraestructura, se ha aplicado el patrón \emph{Factory} clásico mediante clases dedicadas. Este enfoque separa la responsabilidad de crear un objeto de la lógica que decide cómo debe configurarse.
+
+Un ejemplo claro en la plataforma es \texttt{RefreshTokenFactory}. Esta fábrica centraliza la construcción de tokens de sesión, pero delega la política de expiración a una interfaz inyectada (\texttt{IRefreshTokenExpirationPolicy}). Gracias a esta inversión de dependencias, la duración de los tokens puede variar dinámicamente (por ejemplo, según el entorno de despliegue o regulaciones de seguridad) sin necesidad de modificar la fábrica ni la lógica de negocio.
+
+\begin{lstlisting}[style=CSharp, caption={Implementación del patrón Factory delegando logicas de expiracion.}, label={lst:factory_token}]
+public class RefreshTokenFactory(IRefreshTokenExpirationPolicy policy) : IRefreshTokenFactory
+{
+    public RefreshToken CreateForUser(Guid userId)
+    {
+        // La fabrica obtiene la politica de expiracion inyectada dinamicamente
+        TimeSpan duration = policy.ExpirationDuration;
+        return RefreshToken.Create(userId, duration);
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Factory Function (Adaptadores de UI en Frontend)}
+En el entorno del \emph{frontend}, dominado por React y el paradigma de la programación funcional, el concepto de fábrica se ha adaptado utilizando Funciones de Orden Superior (\emph{Higher-Order Functions}). 
+
+El patrón \emph{Factory Function} se utiliza para resolver la necesidad de crear mapeadores de datos que requieren dependencias previas (como diccionarios o catálogos). La función \texttt{makeProjectNodeAdapter} actúa como una fábrica: recibe los catálogos de tipos y estados una sola vez y retorna una nueva función pura. Esta función resultante (\texttt{WorkItemData $\rightarrow$ NodeVisual}) puede ser reutilizada de forma masiva y eficiente por la capa de presentación para transformar los datos del servidor en nodos visuales para el Árbol de Trabajo.
+
+\begin{lstlisting}[style=TypeScript, caption={Implementación de Factory Function mediante clausuras en TypeScript.}, label={lst:factory_frontend}]
+export const makeProjectNodeAdapter = (
+  types: WorkItemTypeData[],
+  statuses: WorkItemStatusData[]) => {
+    
+  // Retorna una funcion pura pre-configurada gracias al closure
+  return (raw: WorkItemData): NodeVisual => {
+    const typeName = types.find((t) => t.id === raw.typeId)?.name ?? 'Task';
+    const color = STATUS_COLORS[
+        statuses.find((s) => s.id === raw.statusId)?.name ?? ''
+    ] ?? DEFAULT_COLOR;
+    
+    return { 
+        title: raw.code, 
+        subtitle: raw.title, 
+        color, 
+        shape: typeName === 'Bug' ? 'spike' : 'circle',
+        // ...
+    };
+  };
+}
+\end{lstlisting}
+
+\subsection{Patrones estructurales}
+Los patrones estructurales se centran en cómo las clases y objetos se componen para formar estructuras más grandes y complejas, garantizando que el sistema sea flexible y eficiente.
+
+\subsubsection{Decorator (Comportamientos de canalización con MediatR)}
+El patrón \emph{Decorator} permite añadir responsabilidades dinámicamente a un objeto envolviéndolo en otro objeto con la misma interfaz, sin alterar su código fuente. En el \emph{backend}, este patrón se ha materializado a través de los \emph{Pipeline Behaviors} de la biblioteca MediatR.
+
+La interfaz \texttt{IPipelineBehavior<TRequest, TResponse>} permite encadenar capas de ejecución alrededor de cada manejador (\emph{handler}) de casos de uso. De este modo, se ejecutan operaciones transversales de forma secuencial: primero la trazabilidad y medición de tiempos (\emph{Logging}), seguido de la validación estructural (\emph{FluentValidation}) y, finalmente, la autorización. Cada comportamiento cede el control a la siguiente capa mediante la invocación de \texttt{next()}, manteniendo a los casos de uso completamente agnósticos respecto a estas validaciones externas.
+
+\begin{lstlisting}[style=CSharp, caption={Implementación del patrón Decorator mediante Pipeline Behaviors para trazabilidad y validación.}, label={lst:decorator_mediatr}]
+// Logging: mide y traza todas las peticiones
+public sealed class LoggingBehavior<TRequest, TResponse>(ILogger<...> logger)
+    : IPipelineBehavior<TRequest, TResponse>
+{
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
+    {
+        logger.LogInformation("[{Behavior}] Executing: {Name}", 
+            nameof(LoggingBehavior<,>), typeof(TRequest).Name);
+            
+        Stopwatch timer = Stopwatch.StartNew();
+        TResponse response = await next(ct);
+        
+        logger.LogInformation("[{Behavior}] Completed in {Ms}ms", 
+            nameof(LoggingBehavior<,>), timer.ElapsedMilliseconds);
+        return response;
+    }
+}
+
+// Validacion: ejecuta todos los IValidator<TRequest> registrados
+public sealed class ValidationBehavior<TRequest, TResponse>(
+    IEnumerable<IValidator<TRequest>> validators)
+    : IPipelineBehavior<TRequest, TResponse>
+{
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
+    {
+        if (!validators.Any()) return await next(ct);
+        
+        ValidationResult[] results = await Task.WhenAll(
+            validators.Select(v => v.ValidateAsync(new(request), ct)));
+            
+        List<ValidationFailure> errors = results
+            .Where(r => !r.IsValid)
+            .SelectMany(r => r.Errors).ToList();
+            
+        if (errors.Count > 0) throw new ValidationException(errors);
+        return await next(ct);
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Proxy (Interceptores HTTP en Frontend)}
+El patrón \emph{Proxy} proporciona un intermediario o sustituto para controlar el acceso a un objeto real, añadiendo comportamiento de forma transparente. En la aplicación cliente, los interceptores de la biblioteca Axios actúan como un \emph{proxy} bidireccional para el cliente \ac{HTTP}.
+
+El interceptor de peticiones (\emph{request}) inyecta la cabecera de autorización (\ac{JWT}) en todas las llamadas salientes, liberando a los servicios individuales de esta responsabilidad. Por su parte, el interceptor de respuestas (\emph{response}) actúa como un mecanismo de resiliencia: si detecta un error \texttt{401 Unauthorized}, pausa las llamadas, ejecuta el refresco del token de forma centralizada (utilizando una promesa compartida para evitar condiciones de carrera  ante múltiples peticiones simultáneas) y, una vez obtenido el nuevo token, reintenta automáticamente la petición original de forma invisible para el usuario.
+
+\begin{lstlisting}[style=TypeScript, caption={Implementación del patrón Proxy mediante interceptores HTTP para inyección y rotación de tokens.}, label={lst:proxy_interceptors}]
+// Request: inyecta el token de acceso en cada peticion
+apiClient.interceptors.request.use((config) => {
+  const requestConfig = config as RetriableRequestConfig;
+  if (!requestConfig.skipAuthorization) {
+    const accessToken = getAccessToken();
+    if (accessToken) {
+        requestConfig.headers.set('Authorization', `Bearer ${accessToken}`);
+    }
+  }
+  return requestConfig;
+});
+
+// Response: detecta 401, refresca y reintenta (una sola vez)
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const requestConfig = error.config as RetriableRequestConfig | undefined;
+    if (!requestConfig || requestConfig._retry || error.response?.status !== 401) {
+        return Promise.reject(error);
+    }
+    
+    requestConfig._retry = true;
+    // Promesa compartida para sincronizar multiples peticiones fallidas
+    const refreshedToken = await getRefreshTokenOnce();  
+    requestConfig.headers.set('Authorization', `Bearer ${refreshedToken}`);
+    
+    return apiClient(requestConfig);
+  }
+);
+\end{lstlisting}
+
+\subsubsection{Facade (ApiGateway de cliente)}
+El patrón \emph{Facade} ofrece una interfaz unificada, simplificada y de alto nivel que oculta la complejidad de un subsistema subyacente compuesto por múltiples interfaces.
+
+En la capa de datos del \emph{frontend}, \texttt{ApiGateway} implementa este patrón agrupando todos los controladores (\emph{Gateways}) individuales bajo un único espacio de nombres jerárquico. De este modo, los componentes de \ac{UI} y los gestores de estado asíncrono no necesitan importar docenas de archivos ni conocer la topología de la \ac{API}, simplemente importan el objeto unificado y navegan por sus propiedades de forma semántica e intuitiva, mejorando significativamente la mantenibilidad y la experiencia del desarrollador (\emph{Developer Experience}).
+
+\begin{lstlisting}[style=TypeScript, caption={Implementación del patrón Facade para agrupar los servicios de llamadas HTTP.}, label={lst:facade_apigateway}]
+export const ApiGateway = {
+  organization: {
+    invitations: OrganizationInvitationsGateway,
+    management:  OrganizationManagementGateway,
+    members:     OrganizationMembersGateway,
+    roles:       OrganizationRolesGateway,
+  },
+  project: {
+    customFields: ProjectCustomFieldsGateway,
+    management:   ProjectManagementGateway,
+  },
+  workItem: {
+    management:  WorkItemsGateway,
+    workLogs:    WorkLogGateway,
+    attachments: AttachmentGateway,
+    comments:    CommentGateway,
+  },
+  user:  { session: SessionGateway, users: UsersGateway },
+  agent: AgentGateway,
+  chat:  ChatGateway,
+} as const;
+
+// Uso simplificado desde cualquier componente:
+// ApiGateway.workItem.management.createWorkItem(projectId, payload)
+\end{lstlisting}
+
+\subsubsection{Specification (Encapsulamiento de Consultas)}
+El patrón \emph{Specification}, derivado de las prácticas de \ac{DDD}, encapsula un criterio de consulta y las reglas de negocio asociadas en un objeto tipado, reutilizable y fácilmente testeable.
+
+En lugar de dispersar sentencias de filtrado (\texttt{Where}) y carga ansiosa (\texttt{Include}) a lo largo de los repositorios o manejadores, se define una clase base \texttt{BaseSpecification<T>} que establece el contrato. Las especificaciones concretas, como \texttt{UserWithActiveRefreshTokensSpecification}, heredan de esta base y configuran semánticamente las expresiones condicionales necesarias. Esto garantiza el principio de Responsabilidad Única y permite construir consultas compuestas de alta complejidad de forma declarativa y segura ante refactorizaciones.
+
+\begin{lstlisting}[style=CSharp, caption={Implementación del patrón Specification para la capa de persistencia de datos.}, label={lst:specification_pattern}]
+public abstract class BaseSpecification<T>(Expression<Func<T, bool>> criteria) 
+    : ISpecification<T>
+{
+    private readonly List<Expression<Func<T, object>>> _includes = [];
+    public Expression<Func<T, bool>> Criteria { get; } = criteria;
+    public IReadOnlyCollection<Expression<Func<T, object>>> Includes 
+        => _includes.AsReadOnly();
+        
+    protected void AddInclude(Expression<Func<T, object>> expr) 
+        => _includes.Add(expr);
+}
+
+// Especificacion concreta que encapsula la logica de filtrado e inclusion
+public sealed class UserWithActiveRefreshTokensSpecification 
+    : BaseSpecification<User>
+{
+    public UserWithActiveRefreshTokensSpecification(Guid userId)
+        : base(user => user.Id == userId)
+    {
+        AddInclude(user => user.RefreshTokens
+            .Where(rt => rt.RevokedAt == null && rt.ExpiresAt > DateTime.UtcNow));
+    }
+}
+\end{lstlisting}
+
+\subsection{Patrones de comportamiento}
+Los patrones de comportamiento se centran en los algoritmos y en la asignación de responsabilidades entre los objetos. En lugar de enfocarse únicamente en la estructura, estos patrones gestionan el flujo de control y la comunicación dinámica en el sistema, permitiendo que los componentes interactúen de forma eficiente y con un bajo nivel de acoplamiento.
+
+\subsubsection{CQRS (Separación de Responsabilidades)}
+El patrón \ac{CQRS} \cite{fowler2007cqrs} separa estrictamente las operaciones que modifican el estado del sistema (\emph{Commands}) de aquellas que únicamente leen información (\emph{Queries}). En el \emph{backend}, esta separación permite optimizar y escalar ambas vías de forma independiente. A nivel de implementación, las interfaces \texttt{ICommand} e \texttt{IQuery<T>} actúan como marcadores que extienden \texttt{IRequest} de MediatR, garantizando mediante el sistema de tipos estático que cada manejador reciba exclusivamente su tipo correspondiente.
+
+\begin{lstlisting}[style=CSharp, caption={Definición de interfaces base para CQRS y su aplicación práctica.}, label={lst:cqrs_pattern}]
+public interface ICommand : IRequest;
+public interface ICommand<out TResponse> : IRequest<TResponse>;
+public interface IQuery<out TResponse> : IRequest<TResponse>;
+
+// Command: modifica el estado del dominio
+public sealed record CreateOrganizationCommand(
+    string Name, string Description, string Website)
+    : ICommand<Result<OrganizationDto>>;
+
+// Query: operacion de solo lectura
+public sealed record GetMyOrganizationsQuery(
+    int Limit, string? Cursor, IReadOnlyCollection<string> Sort)
+    : IQuery<Result<PaginatedResult<SimpleOrganizationDto>>>;
+\end{lstlisting}
+
+\subsubsection{Mediator (Desacoplamiento de Flujos)}
+El patrón \emph{Mediator} centraliza la comunicación entre objetos para evitar dependencias directas entre ellos. En la arquitectura del servidor, la biblioteca MediatR actúa como el mediador central: los controladores \ac{API}, los manejadores de eventos y las tareas en segundo plano envían peticiones a través de las interfaces \texttt{ISender} o \texttt{IPublisher}, ignorando por completo qué clase concreta procesará la solicitud.
+
+\begin{lstlisting}[style=CSharp, caption={Uso del patrón Mediator para desacoplar controladores de sus manejadores.}, label={lst:mediator_pattern}]
+// Controller base que inyecta el ISender del Mediator
+public abstract class ApiBaseController : ControllerBase
+{
+    private ISender? _sender;
+    protected ISender Sender => _sender ??= 
+        HttpContext.RequestServices.GetRequiredService<ISender>();
+}
+
+// Controller concreto enviando un Command
+[HttpPost]
+public async Task<IActionResult> Create(
+    [FromBody] CreateOrganizationRequest request, CancellationToken ct)
+{
+    var command = new CreateOrganizationCommand(
+        request.Name, request.Description, request.Website);
+    return HandleResult(await Sender.Send(command, ct));
+}
+\end{lstlisting}
+
+\subsubsection{Repository (Abstracción de Persistencia)}
+Aunque catalogado fundacionalmente como un patrón de dominio \cite{evans2004ddd}, el \emph{Repository} actúa conductualmente como una abstracción de colección en memoria, ocultando los detalles de acceso a datos. Cada módulo del sistema define las interfaces de sus repositorios en la capa de dominio, mientras que su implementación concreta (basada en \emph{Entity Framework Core}) reside en la capa de infraestructura, cumpliendo el Principio de Inversión de Dependencias.
+
+\begin{lstlisting}[style=CSharp, caption={Separación de contrato e implementación mediante el patrón Repository.}, label={lst:repository_pattern}]
+// Dominio: contrato agnostico a la infraestructura
+public interface IOrganizationRepository
+{
+    Task<Organization?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task AddAsync(Organization org, CancellationToken ct = default);
+    Task SaveChangesAsync(CancellationToken ct = default);
+}
+
+// Infraestructura: implementacion concreta acoplada a EF Core
+public class OrganizationRepository(OrganizationDbContext dbContext) 
+    : IOrganizationRepository
+{
+    public async Task<Organization?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
+        await dbContext.Organizations
+            .AsSplitQuery()
+            .Include(o => o.Invitations)
+            .Include(o => o.Roles).ThenInclude(r => r.Permissions)
+            .FirstOrDefaultAsync(o => o.Id == id, ct);
+
+    public async Task SaveChangesAsync(CancellationToken ct = default) =>
+        await dbContext.SaveChangesAsync(ct);
+}
+\end{lstlisting}
+
+\subsubsection{Observer (Múltiples Contextos)}
+El patrón \emph{Observer} define una dependencia de uno-a-muchos, permitiendo que múltiples suscriptores reaccionen a cambios de estado sin que el emisor deba conocerlos. Dada su versatilidad, este patrón vertebra tres componentes críticos del sistema:
+
+\textbf{1. Eventos de Dominio:} Los agregados acumulan eventos de dominio internamente durante su ciclo de vida. Al invocar \texttt{SaveChangesAsync}, el contexto de base de datos extrae estos eventos, los despacha sincrónicamente mediante MediatR y, en la misma transacción, los serializa en la tabla del \emph{Outbox}.
+
+\begin{lstlisting}[style=CSharp, caption={Implementación del patrón Observer para Eventos de Dominio.}, label={lst:observer_domain}]
+public abstract class Entity
+{
+    private readonly List<IDomainEvent> _domainEvents = [];
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+    public void Raise(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
+}
+
+// Intercepcion del DbContext para despachar observadores
+public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
+{
+    List<IDomainEvent> domainEvents = ChangeTracker.Entries<Entity>()
+        .SelectMany(e => e.Entity.DomainEvents).ToList();
+
+    await domainEventsDispatcher.DispatchAsync(domainEvents, ct);
+    InsertOutboxMessages(domainEvents);
+    
+    return await base.SaveChangesAsync(ct);
+}
+\end{lstlisting}
+
+\textbf{2. Eventos de Integración (Outbox/Inbox):} Constituyen la aplicación \emph{cross-módulo} del \emph{Observer}. Un módulo publica un evento que otros módulos consumen de forma asíncrona. La combinación de los patrones \emph{Outbox} e \emph{Inbox} asegura que la publicación es atómica respecto a la escritura en base de datos y que la recepción es idempotente.
+
+\begin{lstlisting}[style=CSharp, caption={Consumo asíncrono e idempotente de Eventos de Integración (Inbox).}, label={lst:observer_integration}]
+public abstract class IntegrationEventHandler<TIntegrationEvent, TContext>(...) 
+    : INotificationHandler<TIntegrationEvent>
+{
+    public async Task Handle(TIntegrationEvent notification, CancellationToken ct)
+    {
+        Guid messageId = integrationEventContextAccessor.CurrentMessageId 
+            ?? GetFallbackMessageId(notification);
+
+        // Verificacion de idempotencia: actua como un observer seguro
+        bool alreadyProcessed = await dbContext.Set<InboxMessage>()
+            .AsNoTracking().AnyAsync(m => m.Id == messageId, ct);
+            
+        if (alreadyProcessed) return;
+
+        await HandleIntegrationEvent(notification, ct);
+
+        dbContext.Set<InboxMessage>().Add(InboxMessage.Create(messageId, ...));
+        await dbContext.SaveChangesAsync(ct);
+    }
+}
+\end{lstlisting}
+
+\textbf{3. Gestión de Estado en Frontend (React Query):} En el cliente, React Query implementa el patrón \emph{Observer} para sincronizar el estado del servidor. Los componentes se suscriben a una \emph{Query}, cuando los datos se invalidan o actualizan en la caché compartida, todos los observadores se re-renderizan automáticamente. Se ha diseñado un sistema de \texttt{QueryKeys} jerárquicas para permitir invalidaciones de caché granulares.
+
+\begin{lstlisting}[style=TypeScript, caption={Suscripción reactiva al estado del servidor mediante React Query.}, label={lst:observer_frontend}]
+// Estructura jerarquica de claves para invalidacion granular
+export const QueryKeys = {
+  workItem: {
+    management: {
+      all: ['workitem', 'management'] as const,
+      list: (projectId: string) => ['workitem', 'management', 'list', projectId] as const,
+    },
+  },
+} as const;
+
+// Hook observador del estado
+export const useProjectWorkItemsQuery = (projectId: string | null) => {
+  const accessToken = useAuthStore((state) => state.accessToken);
+  return useQuery({
+    queryKey: QueryKeys.workItem.management.list(projectId ?? ''),
+    queryFn: async () => { /* Logica de paginacion y llamada a la API */ },
+    enabled: Boolean(accessToken && projectId),
+  });
+};
+\end{lstlisting}
+
+\subsubsection{Chain of Responsibility (Canalización de Autorizaciones)}
+El patrón \emph{Chain of Responsibility} permite que una petición pase por una cadena de manejadores secuenciales, donde cualquiera de ellos puede detener el flujo si no se cumplen ciertas condiciones. En el sistema de autorización, \texttt{OrganizationPermissionBehavior} ejecuta una cadena de validaciones lógicas: verifica la existencia de la organización, la disponibilidad del permiso, la membresía del usuario y, finalmente, su nivel de acceso.
+
+\begin{lstlisting}[style=CSharp, caption={Validación en cascada mediante Chain of Responsibility.}, label={lst:chain_pattern}]
+public sealed class OrganizationPermissionBehavior<TRequest, TResponse>(...) 
+    : IPipelineBehavior<TRequest, TResponse>
+{
+    public async Task<TResponse> Handle(TRequest request, 
+        RequestHandlerDelegate<TResponse> next, CancellationToken ct)
+    {
+        // [...] Extraccion de la configuracion de permisos requeridos
+        
+        Organization? org = await organizationRepository
+            .GetByIdAsync(permissionRequest.OrganizationId, ct);
+        if (org is null) return CreateFailureResponse(OrganizationNotFound); // Corta la cadena
+
+        OrganizationInvitation? invitation = org.Invitations
+            .FirstOrDefault(inv => inv.UserId == userContext.UserId);
+        if (invitation is null) return CreateFailureResponse(OrganizationMembershipRequired);
+
+        // [...] Evaluacion del nivel del rol
+        if (rolePermission?.Level == PermissionLevel.Full) 
+            return await next(ct); // Autorizado: pasa el control al siguiente eslabon
+            
+        return CreateFailureResponse(OrganizationPermissionDenied);
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Command (Mutaciones en Frontend)}
+El patrón \emph{Command} encapsula una solicitud y sus efectos secundarios como un objeto independiente. En el \emph{frontend}, las mutaciones de React Query actúan como comandos puros: agrupan la llamada a la \ac{API}, el manejo de errores, la invalidación de la caché local y la retroalimentación visual al usuario en una unidad funcional encapsulada.
+
+\begin{lstlisting}[style=TypeScript, caption={El patrón Command encapsulando operaciones de escritura en React Query.}, label={lst:command_frontend}]
+export const useCreateWorkItemMutation = (projectId: string) => {
+  const handleApiError = useApiErrorHandler();
+
+  return useMutation({
+    mutationKey: [...QueryKeys.workItem.management.all, 'create', projectId],
+    mutationFn: (payload: CreateWorkItemRequest) =>
+      ApiGateway.workItem.management.createWorkItem(projectId, payload),
+    onSuccess: async () => {
+      // Efectos secundarios unificados dentro del Command
+      await queryClient.invalidateQueries({ 
+        queryKey: QueryKeys.workItem.management.list(projectId) 
+      });
+      toast.success(i18n.t('create.feedback.created', { ns: 'workitems' }));
+    },
+    onError: (error) => handleApiError(error),
+  });
+};
+\end{lstlisting}
+
+\subsubsection{Strategy (Inicialización Dinámica de Datos)}
+El patrón \emph{Strategy} define una familia de algoritmos, los encapsula y los hace intercambiables en tiempo de ejecución sin alterar el cliente que los utiliza. La inicialización de la base de datos (\emph{Seeding}) utiliza este patrón inyectando diferentes estrategias (\texttt{DevelopmentUserSeeder} frente a \texttt{ProductionUserSeeder}) en función del entorno de despliegue, evitando lógicas condicionales distribuidas.
+
+\begin{lstlisting}[style=CSharp, caption={Implementación de Strategy para la inyección de datos iniciales.}, label={lst:strategy_pattern}]
+public interface IUserSeederStrategy
+{
+    Task SeedAsync(UserDbContext dbContext, CancellationToken ct = default);
+}
+
+public sealed class DevelopmentUserSeeder : IUserSeederStrategy
+{
+    public async Task SeedAsync(UserDbContext dbContext, CancellationToken ct = default)
+    {
+        if (await dbContext.Users.AnyAsync(ct)) return;
+        User[] users = [
+            User.Create("Admin", "Developer", "admin@dev.com"),
+            User.Create("John",  "Doe",       "john@dev.com"),
+        ];
+        await dbContext.Users.AddRangeAsync(users, ct);
+        await dbContext.SaveChangesAsync(ct);
+    }
+}
+
+// Inyeccion de dependencias resolviendo la estrategia en el arranque
+services.AddScoped<IUserSeederStrategy>(
+    isDevelopment 
+        ? _ => new DevelopmentUserSeeder() 
+        : _ => new ProductionUserSeeder());
+\end{lstlisting}
+
+\subsubsection{Template Method (Ganchos de Consulta Uniformes)}
+El patrón \emph{Template Method} define el esqueleto de un algoritmo, delegando la implementación de ciertos pasos a subclases o instancias específicas. En los \emph{hooks} de consulta del cliente, se define una plantilla inmutable (comprobación de identidad $\rightarrow$ asignación de clave $\rightarrow$ llamada de red $\rightarrow$ condición de activación) aplicable a todos los recursos del dominio, especializando únicamente las propiedades locales.
+
+\begin{lstlisting}[style=TypeScript, caption={Estructura Template Method aplicada a los custom hooks de React.}, label={lst:template_method_pattern}]
+// Plantilla estructural que todos los query hooks del dominio replican
+export const use[Domain]Query = (id: string | null) => {
+  const accessToken = useAuthStore((state) => state.accessToken);
+
+  return useQuery({
+    queryKey: QueryKeys.[domain].list(id ?? ''),       // Paso variable
+    queryFn: () => ApiGateway.[domain].get(id!),       // Paso variable
+    enabled: Boolean(accessToken && id),               // Condicion comun
+  });
+};
+\end{lstlisting}
 
 
 \section{Diseño de la interfaz de usuario}
