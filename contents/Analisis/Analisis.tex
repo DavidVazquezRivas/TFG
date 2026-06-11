@@ -352,7 +352,7 @@ Este módulo es responsable de gestionar la información relacionada con los usu
     \item \textbf{\emph{user\_skill\_metrics}:} Tabla intermedia que asocia a cada usuario con sus habilidades y contiene métricas como experiencia, calidad, velocidad y sesgo de predicción.
 \end{itemize}
 
-\begin{figure}[ht]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-users.png}
     \caption{\ac{MER} del módulo de Usuarios e Identidad}
@@ -370,7 +370,7 @@ Este módulo gestiona la información relacionada con las organizaciones, sus mi
     \item \textbf{\emph{user\_readmodels}:} Almacena información de lectura específica de los usuarios dentro del contexto de una organización. Sigue el patrón \ac{CQRS}\cite{fowler2007cqrs} que se detallará más adelante en el diseño de la arquitectura.
 \end{itemize}
 
-\begin{figure}[ht]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-organizations.png}
     \caption{\ac{MER} del módulo de Organizaciones}
@@ -397,7 +397,7 @@ Este módulo gestiona la información relacionada con los proyectos, sus miembro
     \item \textbf{\emph{field\_applies}:} Tabla intermedia que asocia los campos personalizados con los tipos de elementos de trabajo a los que aplican.
 \end{itemize}
 
-\begin{figure}[ht]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-projects.png}
     \caption{\ac{MER} del módulo de Proyectos}
@@ -423,7 +423,7 @@ Este módulo gestiona la información relacionada con los elementos de trabajo, 
     \item \textbf{\emph{activity\_logs}:} Almacena un historial de cambios y eventos relacionados con los elementos de trabajo, como cambios de estado, reasignaciones, actualizaciones de campos, etc.
 \end{itemize}
 
-\begin{figure}[ht]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-work-items.png}
     \caption{\ac{MER} del módulo de Elementos de Trabajo}
@@ -442,7 +442,7 @@ Este módulo gestiona la información relacionada con los chats entre usuarios y
     \item \textbf{\emph{project\_readmodels}:} Almacena información de lectura de los proyectos para conocer a qué proyecto pertenece un agente.
 \end{itemize}
 
-\begin{figure}[ht]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-chats.png}
     \caption{\ac{MER} del módulo de Chats}
@@ -466,7 +466,7 @@ Este módulo gestiona la información relacionada con los agentes de \ac{IA} que
     \item \textbf{\emph{agent\_execution\_pending\_events}:} Almacena los eventos de los que está pendiente una ejecución de un agente de \ac{IA} para poder reactivar la ejecución cuando se cumplan las condiciones del evento. Por ejemplo, si la ejecución de un agente está pendiente de la respuesta de un usuario para acabar su ejecución. Es importante no solo el tipo de evento esperado, sino el \emph{correlation\_id} del evento para poder asociarlo con la ejecución correcta.
  \end{itemize}
 
- \begin{figure}[ht]
+ \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-agents.png}
     \caption{\ac{MER} del módulo de Agentes}

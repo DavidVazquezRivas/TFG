@@ -15,7 +15,7 @@ Los principales actores identificados en el diagrama de contexto son:
     \item \textbf{Proveedores de \ac{IA}:} Servicios externos que ofrecen modelos \ac{IA} para procesar prompts del módulo de agentes (ej. OpenAI, Anthropic).
 \end{itemize}    
 
-\begin{figure}[ht]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{images/content/Diseño/level1.png}
     \caption{Diagrama de contexto de la aplicación}
@@ -34,7 +34,7 @@ Los contenedores identificados en el diagrama son:
   \item \textbf{Servidor de logs:} Contenedor de infraestructura encargado de centralizar y gestionar los logs generados por el sistema. Este contenedor recolecta, indexa y almacena los logs, trazas de ejecución y métricas de rendimiento producidos por la aplicación. Su uso permite monitorizar el estado del sistema, detectar errores y analizar el comportamiento de la aplicación, por lo que es una herramienta añadida únicamente para mejorar la mantenibilidad del sistema.
 \end{itemize}
 
-\begin{figure}[ht]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{images/content/Diseño/level2.png}
     \caption{Diagrama de contenedores de la aplicación}
@@ -61,7 +61,7 @@ Revisando ahora los componentes que encontramos en este diagrama, observamos:
   \item \textbf{\emph{Building blocks}:} Componentes comunes que pueden ser utilizados por varios módulos,  cómo abstracciones, funcionalidades transversales para realizar llamadas, gestionar conexiones con las bases de datos, publicación y suscripción de eventos, etc.
 \end{itemize}
 
-\begin{figure}[ht]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{images/content/Diseño/level3-backend.png}
     \caption{Diagrama de componentes del \emph{backend}}
@@ -79,7 +79,7 @@ Es importante destacar que toda esta estructura se vertebra en torno al Principi
 
 Además de estos componentes esenciales, cada módulo también incluye un componente de integración, que expone los eventos de integración que el módulo emite para que otros módulos puedan suscribirse a ellos.
 
-\begin{figure}[ht]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{images/content/Diseño/level3-module.png}
     \caption{Diagrama de componentes dentro de un módulo}
@@ -95,3 +95,115 @@ Para lograr una correcta separación de responsabilidades dentro de cada módulo
     \item \textbf{Capa de proveedores:} Contiene los proveedores de la API de Contexto (\emph{Context API}) de React que gestionan el estado global de la aplicación. Esta capa aísla y expone funcionalidades transversales críticas, tales como la autenticación, la gestión de sesiones de usuario y la internacionalización de la aplicación.
     \item \textbf{Capa de datos:} Encargada de abstraer y gestionar toda la comunicación asíncrona con el \emph{backend} mediante llamadas a la \ac{API} REST. Está formada por tres elementos principales: el cliente \ac{HTTP} base; el cliente \ac{API}, que actúa como un patrón \emph{Facade} \cite{gamma1994design} exponiendo métodos tipados y específicos para cada uno de los \emph{endpoints}; y finalmente el componente de \emph{queries}, que utiliza la biblioteca React Query \cite{tanstackquery} para optimizar el ciclo de vida de las peticiones, gestionando de forma eficiente el estado asíncrono, la caché de datos y la invalidación de la misma.
 \end{itemize}
+
+\section{Patrón de despliegue}
+En el contexto académico actual del proyecto, se ha tomado la decisión arquitectónica de establecer un entorno de despliegue pragmático y acotado. Desplegar una arquitectura distribuida en servicios \emph{cloud} de alta disponibilidad excedería los objetivos, el presupuesto y el marco temporal de esta fase de desarrollo. Por tanto, el patrón de despliegue se centra en la contenerización para asegurar un entorno de integración local robusto e idéntico para todos los evaluadores, combinado con un alojamiento estático para el cliente web de Leaftask.
+
+\subsection{Orquestación con Docker Compose}
+Para evitar el clásico problema de "funciona en mi máquina" y estandarizar la infraestructura necesaria para ejecutar el \emph{backend}, se ha contenerizado la aplicación utilizando Docker y orquestando los servicios mediante Docker Compose. 
+
+Para el entorno de evaluación y producción, esta infraestructura se despliega íntegramente en un\ac{VPS} aprovisionado mediante los créditos académicos del programa \emph{Azure for Students}. Esta decisión permite disponer de los recursos de cómputo necesarios a coste cero, automatizando las actualizaciones del servidor mediante un flujo de \ac{CICD} gestionado con GitHub Actions.
+
+A través de un único archivo de configuración declarativa (\texttt{docker-compose.yml}), el sistema levanta simultáneamente todos los componentes necesarios aislados en su propia red virtual. Los contenedores orquestados son:
+\begin{itemize}
+    \item \textbf{\emph{Backend}:} El servidor principal que agrupa los módulos del monolito, empaquetado en una imagen Docker que contiene el entorno de ejecución. Expone la \ac{API} REST por un puerto específico para comunicarse con el cliente web.
+    \item \textbf{Bases de datos:} Los contenedores de las bases de datos relacionales asociadas a cada \emph{Bounded Context}. Se despliegan con volúmenes persistentes asociados para evitar la pérdida de datos al destruir los contenedores.
+    \item \textbf{Almacenamiento de objetos:} Contenedor de infraestructura (MinIO) que simula un entorno de \emph{Object Storage}, utilizado para almacenar los archivos y adjuntos de forma desacoplada de las bases de datos.
+    \item \textbf{Servidor de logs:} Contenedor encargado de centralizar y recolectar las trazas de ejecución y métricas generadas por el sistema.
+\end{itemize}
+
+\subsection{Despliegue del cliente web}
+La ejecución y despliegue de la aplicación cliente (\ac{SPA} desarrollada en React) se ha planteado en dos escenarios diferentes, separando el flujo de desarrollo del de producción:
+\begin{itemize}
+    \item \textbf{Simulación en vivo (Entorno local):} Para las fases de diseño de interfaz (\emph{UI}) y construcción de componentes, se utiliza el servidor de desarrollo propio del ecosistema. Esto habilita el \emph{Hot Reloading}, permitiendo visualizar los cambios instantáneamente en el navegador del desarrollador sin el coste de tiempo que supone realizar un \emph{build} de producción en cada iteración.
+    \item \textbf{Despliegue automatizado en la nube (Vercel):} Para la puesta en producción, se ha descartado el uso del \ac{VPS} interno en favor de \textbf{Vercel}, una plataforma \ac{PaaS} optimizada específicamente para alojar aplicaciones \emph{frontend} modernas. Esta plataforma se integra de forma nativa con el repositorio de código y proporciona un flujo de \ac{CICD} completamente transparente: con cada actualización en la rama principal, Vercel ejecuta automáticamente el \emph{build} de React, optimiza los archivos estáticos y los distribuye a través de una red \ac{CDN} global. Esto garantiza alta disponibilidad, despliegues sin intervención manual y acceso seguro a la plataforma a través de una URL pública a coste cero.
+\end{itemize}
+
+
+\section{Diagramas de secuencia}
+Algunos de los procesos más críticos del sistema, como la sincronización de datos entre módulos, la ejecución de tareas de los agentes de \ac{IA} o el flujo de autenticación, requieren de una orquestación más compleja que involucra múltiples componentes y servicios. Para ilustrar claramente cómo se desarrollan estos procesos, se han elaborado diagramas de secuencia \ac{UML} que detallan paso a paso las interacciones entre los diferentes elementos del sistema.
+
+\subsection{Sincronización de datos entre módulos}
+Como se mencionó en la definición de la arquitectura, la separación física y lógica de las bases de datos por cada \emph{Bounded Context} impone el reto de mantener la consistencia de la información sin recurrir a transacciones distribuidas, las cuales penalizarían gravemente el rendimiento y la disponibilidad del sistema. Para resolver este desafío, se ha implementado una arquitectura basada en eventos combinada con el patrón \emph{Transactional Outbox} y su contraparte \emph{Inbox}.
+
+Este patrón garantiza la entrega de mensajes de forma fiable (\emph{at-least-once delivery}) y permite un procesamiento idempotente en el módulo destino, asumiendo un modelo de consistencia eventual. A continuación, se detalla el flujo de este proceso, tomando como ejemplo el cambio de estado de un elemento de trabajo y la consecuente generación de una notificación asíncrona (ver Figura \ref{fig:sequence-sincronization}):
+
+\begin{enumerate}
+    \item \textbf{Fase 1: Actualización síncrona y \emph{Outbox}:} El flujo comienza cuando el usuario solicita actualizar el estado de una tarea a través de la API. La capa de aplicación procesa el caso de uso, actualiza la entidad de dominio y genera un evento de integración (ej. \emph{WorkItemStatusChangedEvent}). El aspecto crítico de esta fase es que la capa de infraestructura persiste tanto la actualización de la entidad de negocio como el evento (en una tabla auxiliar \texttt{OutboxMessages}) dentro de una única transacción ACID en la base de datos local del módulo. Esto asegura la consistencia interna: si la base de datos falla, ninguna de las dos operaciones se confirma. Inmediatamente después, se devuelve una respuesta exitosa HTTP 200 al usuario, sin bloquear el hilo principal esperando la comunicación con otros módulos.
+    
+    \item \textbf{Fase 2: Despacho de eventos (\emph{Outbox Webjob}):} Un proceso en segundo plano (\emph{background job}) aislado del flujo web consulta periódicamente la tabla \texttt{OutboxMessages} en busca de eventos no publicados. Al encontrarlos, los extrae, los publica en el bus de integración (\emph{Event Bus}) y actualiza su estado a procesado. Esta separación permite aislar la latencia o posibles caídas del sistema de mensajería (tras un futuro cambio a microservicios) del tiempo de respuesta de la API.
+    
+    \item \textbf{Fase 3: Recepción aislada (\emph{Inbox}):} El bus de eventos entrega el mensaje al módulo suscriptor (en este diagrama, el módulo de Notificaciones). En lugar de ejecutar la lógica de negocio inmediatamente, el suscriptor se limita a guardar el evento recibido en su propia tabla \texttt{InboxMessages}. Esta operación de persistencia está diseñada mediante restricciones de base de datos para ser idempotente, protegiendo al sistema receptor de posibles entregas duplicadas por parte del bus de eventos.
+    
+    \item \textbf{Fase 4: Procesamiento asíncrono (\emph{Inbox Job}):} Finalmente, una tarea programada (\emph{webjob}) dentro del módulo de Notificaciones lee los mensajes pendientes de su bandeja de entrada por lotes (\emph{batches}). Por cada evento, ejecuta la lógica de aplicación correspondiente, como generar la entidad de Notificación para el usuario asignado, la persiste en su base de datos y marca el mensaje original del \emph{Inbox} como procesado.
+\end{enumerate}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{images/content/Diseño/sequence-sincronization.png}
+    \caption{Diagrama de secuencia de la sincronización de datos mediante el patrón Outbox/Inbox.}
+    \label{fig:sequence-sincronization}
+\end{figure}
+
+\subsection{Ejecución de tareas de los agentes de \ac{IA}}
+A diferencia de las interacciones síncronas tradicionales mediante \emph{prompts}, los agentes de \ac{IA} en la plataforma operan como miembros dentro del equipo. Esto implica que sus tareas pueden ser de larga duración (\emph{long-running workflows}) y requieren la capacidad de reaccionar a eventos, ejecutar herramientas del sistema y, cuando es necesario, pausar su ejecución para esperar la validación o respuesta de un usuario humano. 
+
+Para modelar este comportamiento asíncrono y reactivo de forma resiliente, se ha diseñado un motor de ejecución propio (\emph{Agent Core}). La Figura \ref{fig:sequence-agents} ilustra el ciclo de vida completo de la ejecución de una tarea por parte de un agente, dividido en cuatro fases principales:
+
+\begin{enumerate}
+    \item \textbf{Fase 1: Desencadenador (\emph{Trigger}):} La activación de un agente puede producirse por dos vías. Por un lado, mediante \emph{Event Triggers}: cuando ocurre un evento de dominio en el bus (por ejemplo, la creación de un nuevo elemento de trabajo), el manejador consulta en base de datos si existe algún agente suscrito a dicho evento y, de ser así, inserta un registro de ejecución en estado pendiente. Por otro lado, mediante \emph{Time Triggers}: el planificador (Quartz) dispara eventos basados en expresiones \emph{cron} (por ejemplo, para generar el \emph{Daily Standup} cada mañana), generando igualmente una ejecución pendiente.
+
+    \item \textbf{Fase 2: Ejecución e Invocación del Modelo:} Un proceso en segundo plano (\emph{webjob}) recoge las ejecuciones pendientes. El sistema compone el contexto, inyectando el \emph{system prompt} del agente, la información del entorno y el historial de ejecución, y realiza la llamada al \ac{LLM}. A partir de aquí, la \ac{IA} razona sobre los pasos a seguir. Si decide ejecutar una acción directa, invoca la \ac{API} de \emph{Tools}, procesa el resultado y continúa. Sin embargo, si el agente determina que necesita información o aprobación de un humano, invoca la herramienta \texttt{SuspendWorkflow}. Esta acción actualiza el estado de la ejecución a suspendida, guarda el contexto de la conversación para no perder memoria de la misma, e inserta un registro indicando qué evento específico está esperando para reactivarse.
+
+    \item \textbf{Fase 3: Reactivación por Evento:} Mientras el flujo está suspendido, el agente no consume recursos computacionales. Si el sistema detecta el evento esperado en el bus (por ejemplo, un usuario responde al comentario del agente), el manejador localiza la ejecución suspendida correspondiente mediante identificadores de correlación, la devuelve al estado pendiente y el flujo retorna automáticamente a la Fase 2, permitiendo que el \ac{LLM} continúe su razonamiento con la nueva información aportada por el usuario.
+
+    \item \textbf{Fase 4: Reactivación por \emph{Timeout}:} Para evitar que los flujos de trabajo queden bloqueados indefinidamente si el usuario humano ignora la solicitud del agente, el sistema cuenta con un mecanismo de caducidad. Si se alcanza el tiempo máximo de espera definido, el planificador (Quartz) reactiva la ejecución de forma forzada. En este caso, se inyecta un \emph{prompt} al modelo indicando explícitamente que el tiempo de espera ha expirado sin respuesta del usuario. Basándose en esta instrucción, el \ac{LLM} puede decidir sus siguientes pasos de forma autónoma, como escalar el problema a un gestor, reintentar la comunicación o continuar con la ejecución asumiendo un escenario por defecto.
+\end{enumerate}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{images/content/Diseño/sequence-agents.png}
+    \caption{Diagrama de secuencia del ciclo de ejecución, suspensión y reactivación de un agente de IA.}
+    \label{fig:sequence-agents}
+\end{figure}
+
+\subsection{Flujo de autenticación}
+La gestión de la identidad y las sesiones en aplicaciones web modernas (\ac{SPA}) requiere un diseño riguroso para prevenir vulnerabilidades de seguridad, tales como el robo de credenciales mediante ataques \ac{XSS} o \ac{CSRF}. Para garantizar el acceso seguro a la aplicación, se ha implementado un flujo de autenticación delegada basado en OAuth 2.0 \cite{rfc6749} (concretamente mediante Google \ac{SSO}), combinado con un sistema de doble token (\emph{Access Token} y \emph{Refresh Token}) con rotación de credenciales.
+
+El proceso completo, ilustrado en la Figura \ref{fig:sequence-auth}, se divide en dos fases operativas:
+
+\begin{enumerate}
+    \item \textbf{Fase 1: Autenticación inicial y aprovisionamiento (\emph{Google SSO}):} 
+    El ciclo comienza cuando el usuario inicia sesión mediante el proveedor de identidad externo (Google). El cliente web recibe un token de autorización temporal y lo transmite al \emph{backend}. Por motivos de seguridad, el servidor no confía en la aserción del cliente y verifica criptográficamente la validez de este token directamente contra los servidores de Google. Una vez validada la identidad (nombre y correo electrónico), el sistema comprueba si el usuario existe en la base de datos de la plataforma; de no ser así, se le registra automáticamente. 
+    
+    A continuación, el \emph{backend} genera dos credenciales de sesión:
+    \begin{itemize}
+        \item Un \emph{Access Token} (en formato \ac{JWT}) de vida corta (60 minutos), que se devuelve en el cuerpo de la respuesta HTTP. El \emph{frontend} almacena este token \textbf{exclusivamente en memoria} (nunca en \emph{Local Storage}), protegiéndolo contra extracciones maliciosas por parte de \emph{scripts} de terceros.
+        \item Un \emph{Refresh Token} de larga duración (7 días), el cual se persiste en la base de datos y se envía al cliente empaquetado en una cabecera \texttt{Set-Cookie} con los atributos \texttt{HttpOnly} y \texttt{Secure}. Esto garantiza que el navegador lo almacene de forma segura e inaccesible mediante JavaScript.
+    \end{itemize}
+
+    \item \textbf{Fase 2: Flujo de renovación de sesión (\emph{Refresh Flow}):}
+    Dado que el \emph{Access Token} expira rápidamente, el sistema debe ser capaz de renovarlo sin interrumpir la experiencia del usuario. Cuando el \emph{frontend} intenta consumir un recurso protegido y recibe un error \texttt{HTTP 401 Unauthorized} (indicando que el \ac{JWT} ha caducado o no existe), un interceptor en el cliente HTTP pausa la petición original y lanza una llamada al \emph{endpoint} de renovación (\texttt{/session/refresh}).
+    
+    Al realizar esta petición, el navegador incluye automáticamente la cookie \texttt{HttpOnly} con el \emph{Refresh Token}. El \emph{backend} recibe la petición, valida la existencia y vigencia del token en su base de datos, e implementa un mecanismo de \textbf{Rotación de Tokens de Refresco} (\emph{Refresh Token Rotation}):
+    \begin{itemize}
+        \item Si el token no es válido o ha caducado, se deniega la renovación y el usuario es redirigido a la pantalla de inicio de sesión.
+        \item Si el token es válido, el sistema revoca inmediatamente ese \emph{Refresh Token} antiguo de la base de datos, generando un nuevo par de \emph{Access Token} y \emph{Refresh Token}. Este mecanismo asegura que si un token de refresco es interceptado, su reutilización invalidará la familia de tokens, alertando de una brecha de seguridad.
+    \end{itemize}
+    Finalmente, el \emph{frontend} actualiza su \ac{JWT} en memoria y reintenta de forma transparente la petición original que había fallado, completando así el proceso sin fricción para el usuario.
+\end{enumerate}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{images/content/Diseño/sequence-auth.png}
+    \caption{Diagrama de secuencia del flujo de autenticación, aprovisionamiento de usuarios y rotación de tokens.}
+    \label{fig:sequence-auth}
+\end{figure}
+
+\section{Patrones de diseño}
+
+
+\section{Diseño de la interfaz de usuario}
+
+
+\section{Flujo de comunicación con el usuario}
