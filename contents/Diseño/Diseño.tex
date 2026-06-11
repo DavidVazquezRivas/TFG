@@ -124,7 +124,7 @@ La ejecución y despliegue de la aplicación cliente (\ac{SPA} desarrollada en R
 Algunos de los procesos más críticos del sistema, como la sincronización de datos entre módulos, la ejecución de tareas de los agentes de \ac{IA} o el flujo de autenticación, requieren de una orquestación más compleja que involucra múltiples componentes y servicios. Para ilustrar claramente cómo se desarrollan estos procesos, se han elaborado diagramas de secuencia \ac{UML} que detallan paso a paso las interacciones entre los diferentes elementos del sistema.
 
 \subsection{Sincronización de datos entre módulos}
-Como se mencionó en la definición de la arquitectura, la separación física y lógica de las bases de datos por cada \emph{Bounded Context} impone el reto de mantener la consistencia de la información sin recurrir a transacciones distribuidas, las cuales penalizarían gravemente el rendimiento y la disponibilidad del sistema. Para resolver este desafío, se ha implementado una arquitectura basada en eventos combinada con el patrón \emph{Transactional Outbox} y su contraparte \emph{Inbox}.
+Como se mencionó en la definición de la arquitectura, la separación física y lógica de las bases de datos por cada \emph{Bounded Context} impone el reto de mantener la consistencia de la información sin recurrir a transacciones distribuidas, las cuales penalizarían gravemente el rendimiento y la disponibilidad del sistema. Para resolver este desafío, se ha implementado una arquitectura basada en eventos combinada con el patrón \emph{Transactional Outbox} y su contraparte \emph{Inbox} \cite{richardson2018microservices}.
 
 Este patrón garantiza la entrega de mensajes de forma fiable (\emph{at-least-once delivery}) y permite un procesamiento idempotente en el módulo destino, asumiendo un modelo de consistencia eventual. A continuación, se detalla el flujo de este proceso, tomando como ejemplo el cambio de estado de un elemento de trabajo y la consecuente generación de una notificación asíncrona (ver Figura \ref{fig:sequence-sincronization}):
 
@@ -153,7 +153,7 @@ Para modelar este comportamiento asíncrono y reactivo de forma resiliente, se h
 \begin{enumerate}
     \item \textbf{Fase 1: Desencadenador (\emph{Trigger}):} La activación de un agente puede producirse por dos vías. Por un lado, mediante \emph{Event Triggers}: cuando ocurre un evento de dominio en el bus (por ejemplo, la creación de un nuevo elemento de trabajo), el manejador consulta en base de datos si existe algún agente suscrito a dicho evento y, de ser así, inserta un registro de ejecución en estado pendiente. Por otro lado, mediante \emph{Time Triggers}: el planificador (Quartz) dispara eventos basados en expresiones \emph{cron} (por ejemplo, para generar el \emph{Daily Standup} cada mañana), generando igualmente una ejecución pendiente.
 
-    \item \textbf{Fase 2: Ejecución e Invocación del Modelo:} Un proceso en segundo plano (\emph{webjob}) recoge las ejecuciones pendientes. El sistema compone el contexto, inyectando el \emph{system prompt} del agente, la información del entorno y el historial de ejecución, y realiza la llamada al \ac{LLM}. A partir de aquí, la \ac{IA} razona sobre los pasos a seguir. Si decide ejecutar una acción directa, invoca la \ac{API} de \emph{Tools}, procesa el resultado y continúa. Sin embargo, si el agente determina que necesita información o aprobación de un humano, invoca la herramienta \texttt{SuspendWorkflow}. Esta acción actualiza el estado de la ejecución a suspendida, guarda el contexto de la conversación para no perder memoria de la misma, e inserta un registro indicando qué evento específico está esperando para reactivarse.
+    \item \textbf{Fase 2: Ejecución e Invocación del Modelo:} Un proceso en segundo plano (\emph{webjob}) recoge las ejecuciones pendientes. El sistema compone el contexto, inyectando el \emph{system prompt} del agente, la información del entorno y el historial de ejecución, y realiza la llamada al \ac{LLM}. A partir de aquí, la \ac{IA} razona sobre los pasos a seguir \cite{yao2022react}. Si decide ejecutar una acción directa, invoca la \ac{API} de \emph{Tools}, procesa el resultado y continúa. Sin embargo, si el agente determina que necesita información o aprobación de un humano, invoca la herramienta \texttt{SuspendWorkflow}. Esta acción actualiza el estado de la ejecución a suspendida, guarda el contexto de la conversación para no perder memoria de la misma, e inserta un registro indicando qué evento específico está esperando para reactivarse.
 
     \item \textbf{Fase 3: Reactivación por Evento:} Mientras el flujo está suspendido, el agente no consume recursos computacionales. Si el sistema detecta el evento esperado en el bus (por ejemplo, un usuario responde al comentario del agente), el manejador localiza la ejecución suspendida correspondiente mediante identificadores de correlación, la devuelve al estado pendiente y el flujo retorna automáticamente a la Fase 2, permitiendo que el \ac{LLM} continúe su razonamiento con la nueva información aportada por el usuario.
 
@@ -178,14 +178,14 @@ El proceso completo, ilustrado en la Figura \ref{fig:sequence-auth}, se divide e
     
     A continuación, el \emph{backend} genera dos credenciales de sesión:
     \begin{itemize}
-        \item Un \emph{Access Token} (en formato \ac{JWT}) de vida corta (60 minutos), que se devuelve en el cuerpo de la respuesta HTTP. El \emph{frontend} almacena este token \textbf{exclusivamente en memoria} (nunca en \emph{Local Storage}), protegiéndolo contra extracciones maliciosas por parte de \emph{scripts} de terceros.
+        \item Un \emph{Access Token} (en formato \ac{JWT} \cite{rfc7519}) de vida corta (60 minutos), que se devuelve en el cuerpo de la respuesta HTTP. El \emph{frontend} almacena este token \textbf{exclusivamente en memoria} (nunca en \emph{Local Storage}), protegiéndolo contra extracciones maliciosas por parte de \emph{scripts} de terceros.
         \item Un \emph{Refresh Token} de larga duración (7 días), el cual se persiste en la base de datos y se envía al cliente empaquetado en una cabecera \texttt{Set-Cookie} con los atributos \texttt{HttpOnly} y \texttt{Secure}. Esto garantiza que el navegador lo almacene de forma segura e inaccesible mediante JavaScript.
     \end{itemize}
 
     \item \textbf{Fase 2: Flujo de renovación de sesión (\emph{Refresh Flow}):}
     Dado que el \emph{Access Token} expira rápidamente, el sistema debe ser capaz de renovarlo sin interrumpir la experiencia del usuario. Cuando el \emph{frontend} intenta consumir un recurso protegido y recibe un error \texttt{HTTP 401 Unauthorized} (indicando que el \ac{JWT} ha caducado o no existe), un interceptor en el cliente HTTP pausa la petición original y lanza una llamada al \emph{endpoint} de renovación (\texttt{/session/refresh}).
     
-    Al realizar esta petición, el navegador incluye automáticamente la cookie \texttt{HttpOnly} con el \emph{Refresh Token}. El \emph{backend} recibe la petición, valida la existencia y vigencia del token en su base de datos, e implementa un mecanismo de \textbf{Rotación de Tokens de Refresco} (\emph{Refresh Token Rotation}):
+    Al realizar esta petición, el navegador incluye automáticamente la cookie \texttt{HttpOnly} con el \emph{Refresh Token}. El \emph{backend} recibe la petición, valida la existencia y vigencia del token en su base de datos, e implementa un mecanismo de \textbf{Rotación de Tokens de Refresco}:
     \begin{itemize}
         \item Si el token no es válido o ha caducado, se deniega la renovación y el usuario es redirigido a la pantalla de inicio de sesión.
         \item Si el token es válido, el sistema revoca inmediatamente ese \emph{Refresh Token} antiguo de la base de datos, generando un nuevo par de \emph{Access Token} y \emph{Refresh Token}. Este mecanismo asegura que si un token de refresco es interceptado, su reutilización invalidará la familia de tokens, alertando de una brecha de seguridad.
@@ -204,6 +204,49 @@ El proceso completo, ilustrado en la Figura \ref{fig:sequence-auth}, se divide e
 
 
 \section{Diseño de la interfaz de usuario}
+El diseño de la \ac{UI} de Leaftask se concibió con el objetivo principal de ofrecer una experiencia fluida y reducir la carga cognitiva del usuario al enfrentarse a un sistema con alta densidad de información (gestión de proyectos jerárquicos e interacciones con inteligencia artificial) \cite{sweller1988cognitive}. Para lograr esto, se establecieron patrones de interacción consistentes que priman la claridad y el pragmatismo sobre la ornamentación visual.
 
+\subsection{Decisiones de diseño e implementación}
+El sistema visual de la aplicación se construyó utilizando la biblioteca de componentes \emph{shadcn/ui}, combinada con el motor de estilos Tailwind CSS. Esta decisión técnica, similar al uso de utilidades atómicas en el desarrollo móvil, ha permitido estandarizar de forma centralizada los espaciados, la paleta cromática y las tipografías, encapsulando los estilos en un sistema unificado y limpio sin generar una arquitectura de hojas de estilo inmanejable.
+
+La navegación espacial se resolvió adoptando un patrón de Panel Lateral Jerárquico. Este enfoque garantiza la heurística de "Visibilidad del estado del sistema" \cite{nielsen1990heuristic}, separando claramente los accesos globales (perfil, notificaciones, chats) en la parte inferior, de los controles contextuales del proyecto activo en la parte superior.
+
+\subsection{Visualización de datos y complejidad}
+El mayor reto de la interfaz consistía en representar jerarquías de tareas complejas. Para ello, el sistema abandona las tablas tradicionales en favor de representaciones visuales que permiten un escaneo cognitivo rápido:
+
+\begin{itemize}
+    \item \textbf{Mapeo jerárquico (\emph{Tree View}):} La vista principal del proyecto (Figura \ref{fig:ui-treeview}) se abstrae en un grafo interactivo bidimensional. Los elementos de trabajo (\emph{Work Items}) se representan como nodos con dependencias visuales explícitas (líneas conectoras). El color y el relleno de los nodos actúan como barras de progreso y estado radiales, siguiendo lo definido en el capítulo de análisis.
+    \item \textbf{Gestión del contexto:} Al interactuar con un nodo, un panel lateral derecho se despliega con el detalle completo de la tarea, evitando la pérdida de contexto que supondría una redirección a una nueva página completa.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{images/content/Diseño/ui-treeview.png}
+    \caption{Vista en árbol del proyecto, mostrando la jerarquía y dependencias de las tareas.}
+    \label{fig:ui-treeview}
+\end{figure}
+
+\subsection{Flujo de comunicación con el usuario}
+El flujo de comunicación define cómo el sistema interactúa, responde y guía al usuario. Para garantizar una experiencia predecible, el diseño se fundamenta en tres pilares:
+
+\begin{itemize}
+    \item \textbf{Gestión de la espera asíncrona:} En operaciones que requieren llamadas complejas al \emph{backend} o procesamiento de la Inteligencia Artificial (Figura \ref{fig:ui-agentchat}), el sistema enmascara la latencia mediante comunicación visual. Los agentes integrados en el chat informan proactivamente de las acciones que van a ejecutar ("Voy a actualizar el estado del \emph{work item}..."), transformando el tiempo de procesamiento en una experiencia conversacional fluida.
+    \item \textbf{Confirmaciones y zonas de peligro:} La plataforma informa proactivamente sobre el resultado de las operaciones mediante notificaciones efímeras (\emph{toasts}) en las esquinas de la pantalla. Adicionalmente, las acciones destructivas se aíslan visualmente en Zonas de Peligro (\emph{Danger Zones}) y requieren confirmación explícita.
+    \item \textbf{Prevención de errores en autorizaciones:} El sistema materializa el modelo complejo de roles (Figura \ref{fig:ui-permissions}) en una interfaz tabular con semántica de colores clara (verde para control completo, amarillo para acciones supervisadas), minimizando el riesgo de que los administradores apliquen configuraciones de seguridad erróneas.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{images/content/Diseño/ui-permissions.png}
+    \caption{Interfaz de configuración de roles y permisos del proyecto.}
+    \label{fig:ui-permissions}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{images/content/Diseño/ui-agentchat.png}
+    \caption{Interfaz de mensajería mostrando una conversación natural con un Agente de IA.}
+    \label{fig:ui-agentchat}
+\end{figure}
 
 \section{Flujo de comunicación con el usuario}
