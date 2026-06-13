@@ -1,21 +1,154 @@
 \chapter{Planificación}
 \label{chap:planificacion}
 
-\section{Alcance del proyecto}
-\subsection{Definición del alcance}
-Una aplicación de gestión de proyectos profesional a día de hoy es una herramienta con muchísimas funcionalidades, y es imposible abarcar todo el espectro de posibilidades en un proyecto de estas características, tanto en fecha como en dedicación. 
+\section{Gestión del ciclo de vida}
+Para el desarrollo de Leaftask, se ha descartado el uso de metodologías tradicionales o predictivas en cascada (\emph{Waterfall}). En su lugar, se ha adoptado un modelo de ciclo de vida iterativo e incremental basado en los principios ágiles \cite{beck2001agile}, adaptado a la realidad y a los tiempos de un Trabajo de Fin de Grado desarrollado de forma individual.
 
-Por ello, es necesario definir un alcance claro y realista para el proyecto, que permita centrarse en las funcionalidades indispensables en aplicaciones de este este tipo, añadiendo la innovación planteada en el proyecto, y dejando de lado funcionalidades que, aunque interesantes, no son imprescindibles para el correcto funcionamiento de la aplicación.
+Este enfoque metodológico ha permitido mantener una gran flexibilidad ante la resolución de retos técnicos complejos (como la arquitectura orientada a eventos o la integración de \ac{IA}), garantizando que las decisiones de diseño se pudieran auditar y pivotar de forma continua junto al tutor.
 
-Para definir el alcance del proyecto y priorizar las funcionalidades desde el punto de vista del usuario final, se ha utilizado la técnica de las Historias de Usuario (User Stories), que permite describir las funcionalidades desde la perspectiva del usuario, y priorizarlas en función de su importancia para el usuario final.
-Para ello, el primer paso es identificar a los usuarios que van a utilizar la aplicación.
+\subsection{Organización del proyecto y Sprints}
+La planificación temporal del proyecto se ha estructurado mediante \emph{sprints}. Como norma general, se ha establecido una duración fija de \textbf{dos semanas por \emph{sprint}}, lo que proporcionó una (\emph{cadencia}) predecible y constante. Esta duración estándar solo sufrió alteraciones justificadas en momentos puntuales del calendario debido a periodos vacacionales o festividades.
 
+La evolución operativa a lo largo de estos \emph{sprints} se dividió conceptualmente en tres grandes etapas:
 
-\subsection{Exclusiones}
-Tras recopilar las historias de usuario, se han identificado algunas funcionalidades que, aunque podrían ser interesantes, quedan fuera del alcance del proyecto por no ser imprescindibles para el correcto funcionamiento de la aplicación, o por requerir un esfuerzo de desarrollo desproporcionado en relación al beneficio que aportan. De esta forma, se han desarrollado las historias de usuario con una prioridad de \emph{Must Have} y \emph{Should Have}, dejando fuera funcionalidades con prioridad de \emph{Could Have} o \emph{Won't Have}.
+\begin{enumerate}
+    \item \textbf{Fase de Inicio e Investigación (\emph{Sprints} 1 a 4 -- Semanas 1 a 8):} Las primeras cuatro semanas (\emph{Sprints} 1 y 2) se dedicaron al análisis exhaustivo de requisitos y al estudio de viabilidad tecnológica (evaluación de \ac{LLM} y protocolos \ac{MCP}). Las dos semanas siguientes (\emph{Sprint} 3) se centraron en el diseño arquitectónico C4 y el modelado del dominio. Finalmente, el \emph{Sprint} 4 abordó simultáneamente la configuración de la infraestructura contenerizada (base de proyecto frontend y backend), la definición de la \ac{API} REST (contrato) para finalizar con el diseño y el desarrollo completo del primer \emph{Bounded Context}: el módulo de \textbf{Identidad y Accesos}, requisito bloqueante para el resto del sistema.
+    
+    \item \textbf{Fase de Desarrollo (\emph{Sprints} 5 a 9 -- Semanas 9 a 20):} Representa el núcleo de codificación de la plataforma. Para garantizar la entrega continua, la implementación de los módulos funcionales se secuenció priorizando la resolución de dependencias arquitectónicas:
+    \begin{itemize}
+        \item \textbf{\emph{Sprint} 5:} Desarrollo del módulo de \textbf{Organizaciones}, estableciendo la estructura base.
+        \item \textbf{\emph{Sprint} 6:} Desarrollo del módulo de \textbf{Proyectos}.
+        \item \textbf{\emph{Sprint} 7:} Desarrollo del módulo central de \textbf{Elementos de Trabajo} (\emph{Work Items}), materializando la lógica del Árbol de Trabajo.
+        \item \textbf{\emph{Sprint} 8:} Construcción del módulo de \textbf{Chats}. Durante esta iteración se tomó la decisión de adelantar el análisis y diseño de la base del módulo de \textbf{Agentes de \ac{IA}}, con el objetivo de finalizar las interfaces de comunicación del chat de forma temprana y evitar cuellos de botella.
+        \item \textbf{\emph{Sprint} 9:} Cierre definitivo del motor de \textbf{Agentes de IA}. En esta misma iteración se completó el módulo de \textbf{Notificaciones}, absorbiendo la carga de trabajo de forma paralela para acelerar la finalización de los agentes.
+    \end{itemize}
+    
+    \item \textbf{Fase de Cierre y Documentación (\emph{Sprints} 9 y 10 -- Semanas 19 a 22):} Para optimizar el calendario y mitigar riesgos, la redacción de esta memoria comenzó solapándose con el último sprint de desarrollo, el \emph{Sprint} 9. El último bloque funcional (\emph{Sprint} 10) se reservó en exclusiva para el cierre de la documentación y la estabilización final del sistema.
+\end{enumerate}
 
-Además, por lo referente a la autenticación, se ha decidido limitar el proyecto a la autenticación mediante OAuth con Google, dejando fuera otras opciones de autenticación (Microsoft, Facebook, X, etc.) ya que el foco del proyecto no es la integración de múltiples proveedores de autenticación.
+\subsection{Diagrama de Gantt}
+Para visualizar formalmente la distribución de los \emph{Sprints}, la secuenciación de los módulos y los solapamientos temporales descritos, la Figura \ref{fig:gantt_tfg} representa el cronograma global del proyecto.
 
-También se han dejado fuera funcionalidades relacionadas con la gestión de recursos (gestión de archivos, integración con repositorios de código, etc.) que aunque serían muy útiles e interesantes, no pueden ser implementadas dentro del alcance del proyecto.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{images/content/Planificacion/cronograma.png}
+    \caption{Diagrama de Gantt del proyecto distribuido por semanas lógicas de trabajo.}
+    \label{fig:gantt_tfg}
+\end{figure}
 
-\section{Cronograma}
+\subsection{Flujo de trabajo y seguimiento de tareas}
+Para el seguimiento diario y la gestión de las tareas dentro de cada \emph{sprint}, se adoptó un enfoque visual basado en tableros Kanban. Este sistema permitió mantener un control absoluto sobre el estado funcional del proyecto y el avance de la carga de trabajo. 
+
+Cada tarea o elemento de trabajo transitaba por un ciclo de vida definido por cinco estados estrictos, garantizando un flujo ordenado desde su concepción hasta su integración final:
+\begin{itemize}
+    \item \textbf{Por hacer (\emph{To Do}):} Tareas y requisitos técnicos que han sido analizados, definidos y asignados a la iteración actual, listos para comenzar su desarrollo.
+    \item \textbf{En curso (\emph{In Progress}):} El elemento de trabajo se encuentra en fase de codificación o desarrollo activo.
+    \item \textbf{Por revisar (\emph{To Review}):} El desarrollo técnico ha concluido a nivel local. El código ha sido subido al repositorio y se encuentra a la espera de ser sometido a validaciones (como la ejecución de pruebas automáticas en el flujo de integración continua).
+    \item \textbf{En revisión (\emph{In Review}):} Fase de auditoría del código. En este estado se revisan activamente los cambios implementados para asegurar que cumplen con los estándares arquitectónicos del proyecto y los requisitos del dominio antes de ser integrados en la rama principal.
+    \item \textbf{Finalizado (\emph{Done}):} La tarea ha superado todas las validaciones de calidad, ha sido integrada (\emph{merged}) en el sistema y se considera completamente terminada.
+\end{itemize}
+
+\section{Aseguramiento de la calidad y pruebas}
+Se ha dado prioridad a la calidad en el desarrollo del sistema, pero en lugar de forzar una metodología de \ac{TDD} estricta en todo el proyecto, se adoptó una estrategia de calidad pragmática y focalizada en el núcleo del sistema, alineada con los principios de la \emph{Clean Architecture}.
+
+Se estableció como requisito técnico innegociable alcanzar un \textbf{100\% de cobertura de código} mediante pruebas unitarias en las dos capas más críticas del \emph{backend}: la capa de \textbf{Dominio} y la capa de \textbf{Aplicación}. 
+Esta exigencia garantizó que todas las reglas de negocio, validaciones de estado de los agregados y la orquestación de los casos de uso funcionaran de forma impecable y estuvieran blindadas frente a regresiones durante la evolución del sistema. Las capas externas (como la de infraestructura o controladores de \ac{API}) se cubrieron mediante pruebas de integración selectivas, optimizando así el tiempo de desarrollo sin comprometer la solidez de la lógica de negocio central.
+
+\section{Definición del \emph{Backlog}}
+
+El \emph{Backlog} ha actuado como la única fuente de la verdad para centralizar todos los requisitos, mejoras funcionales y tareas técnicas del proyecto. Lejos de ser un documento estático, se ha gestionado como un listado vivo y dinámico, permitiendo incorporar los descubrimientos técnicos y adaptando el alcance a medida que la arquitectura del sistema evolucionaba.
+
+\subsection{Estructuración y jerarquía de elementos}
+Para evitar la ambigüedad y mantener el alineamiento entre la visión global del producto y el código fuente, los elementos del \emph{backlog} se han estructurado en tres niveles de granularidad:
+
+\begin{itemize}
+    \item \textbf{Épicas (\emph{Epics}):} Representan grandes bloques de funcionalidad o áreas de negocio que, por su tamaño, no pueden ser completadas en un solo \emph{sprint}. En Leaftask, las Épicas se mapearon directamente de forma unívoca con los \emph{Bounded Contexts} identificados en la fase de análisis.
+    \item \textbf{Historias de Usuario:} Descomponen las Épicas en unidades de valor funcional e independiente desde la perspectiva del usuario o del sistema. Son las identificadas anteriormente en el análisis y cada una cuenta con sus propios Criterios de Aceptación (\emph{Definition of Done}), los cuales sirvieron como base para el diseño de las pruebas automatizadas.
+    \item \textbf{Tareas Técnicas (\emph{Tasks}):} El nivel más granular, utilizado durante la planificación del \emph{sprint}. Consisten en pasos de ingeniería específicos necesarios para completar una historia (por ejemplo, "Crear migración de base de datos para la tabla de proyectos").
+\end{itemize}
+
+\subsection{Criterios de priorización}
+Dada la complejidad estructural de un monolito modular, la priorización de los elementos del \emph{backlog} no se basó exclusivamente en el valor de negocio final, sino en la \textbf{mitigación temprana de riesgos arquitectónicos}. 
+
+\subsection{Estimación de esfuerzo}
+La estimación del esfuerzo necesario para cada tarea se realizó en horas de dedicación efectiva. Al tratarse de un desarrollo individual, el uso de métricas relativas (como los Puntos de Historia) perdía su propósito de consenso en equipo. En su lugar, la estimación temporal en horas permitió auditar de forma precisa la desviación entre el tiempo planificado en las sesiones de análisis y el tiempo real de codificación invertido al cerrar cada \emph{sprint}. Esta métrica de desviación sirvió como mecanismo de \emph{feedback} continuo para ajustar la carga de trabajo en las iteraciones posteriores de forma cada vez más realista.
+
+\section{\emph{Definition of Ready} y \emph{Definition of Done}}
+Para garantizar la calidad del proyecto y evitar cuellos de botella el desarrollo, se han establecido dos políticas de calidad fundamentales derivadas del marco de trabajo Scrum: la \emph{Definition of Ready} y la \emph{Definition of Done}. Estas políticas actúan como contratos que estandarizan el flujo de trabajo de cualquier elemento del \emph{Backlog}.
+
+\subsection{\emph{Definition of Ready}}
+La \emph{Definition of Ready} establece los requisitos previos e innegociables que debe cumplir un elemento de trabajo (\emph{Work Item}) o Historia de Usuario antes de poder ser asignado a un \emph{sprint} y comenzar su codificación. Su objetivo es asegurar que el trabajo está lo suficientemente detallado como para ser implementado sin ambigüedades.
+
+Para que una tarea sea considerada como \emph{Ready}, debe cumplir los siguientes criterios:
+\begin{itemize}
+    \item \textbf{Descripción clara:} La tarea posee una descripción comprensible que detalla el objetivo funcional o técnico a resolver.
+    \item \textbf{Criterios de aceptación:} Se han definido explícitamente las condiciones que el sistema debe cumplir para que la funcionalidad se considere exitosa.
+    \item \textbf{Estimación asignada:} La tarea ha sido analizada y cuenta con una estimación de esfuerzo en horas.
+\end{itemize}
+
+\subsection{\emph{Definition of Done}}
+La \emph{Definition of Done} dicta el estándar de calidad unificado que debe alcanzar cualquier incremento de código para ser considerado como finalizado y listo para ser integrado en la rama principal (\emph{main}) del repositorio. Esta política es vital para mantener la deuda técnica bajo control en una arquitectura compleja.
+
+Un elemento de trabajo solo transiciona al estado finalizado (\emph{Done}) cuando satisface íntegramente la siguiente lista de verificación:
+\begin{itemize}
+    \item \textbf{Criterios de aceptación superados:} El código implementado resuelve satisfactoriamente todos los puntos definidos en la DoR de la tarea.
+    \item \textbf{Cobertura de pruebas (\emph{Testing}):} Para las tareas de \emph{backend}, se han implementado las pruebas unitarias correspondientes y se mantiene la exigencia del 100\% de cobertura de código en las capas de Dominio y Aplicación. Además, todos los \emph{tests} previos del sistema se ejecutan con éxito, garantizando la ausencia de regresiones.
+    \item \textbf{Análisis de código estático:} El código cumple con las normativas de estilo, nomenclatura y principios de la \emph{Clean Architecture} establecidos para el proyecto, sin presentar advertencias (\emph{warnings}) críticas por parte del compilador o del \emph{linter}.
+\end{itemize}
+\
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/content/Planificacion/detail-task.png}
+    \caption{Ejemplo de un elemento de trabajo (\emph{Work Item}) en curso.}
+    \label{fig:planificacion:detail-task}
+\end{figure}
+
+\section{Camino crítico y análisis de dependencias}
+Para garantizar el cumplimiento de los plazos y gestionar adecuadamente las interdependencias entre los diferentes módulos del sistema, se ha modelado la red de tareas del proyecto mediante un diagrama PERT (\emph{Program Evaluation and Review Technique}) y se ha evaluado utilizando el \ac{CPM} \cite{kelley1959critical}.
+
+El modelo de dependencias lógicas, ilustrado en la Figura \ref{fig:pert_diagram}, revela que la arquitectura impone restricciones estrictas de precedencia. Por ejemplo, es inviable implementar la lógica de negocio funcional sin haber estabilizado previamente la infraestructura base (T6) y el módulo de Identidad (T7), dado que todos los agregados del sistema requieren asociarse a un identificador de usuario válido.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{images/content/Planificacion/pert-diagram.png}
+    \caption{Diagrama PERT del proyecto. El camino crítico se resalta en color rojo.}
+    \label{fig:pert_diagram}
+\end{figure}
+
+El camino crítico representa la secuencia más larga de tareas dependientes, dictaminando la duración mínima total del proyecto. Cualquier desviación temporal en estas actividades impactaría directamente en la fecha de entrega nula. Tras el análisis del grafo de dependencias, el camino crítico identificado es el siguiente:
+\begin{equation*}
+T2 \rightarrow T3 \rightarrow T5 \rightarrow T6 \rightarrow T7 \rightarrow T9 \rightarrow T11 \rightarrow T12 \rightarrow T13 \rightarrow T14
+\end{equation*}
+
+La justificación técnica de esta ruta crítica radica en dos cuellos de botella fundamentales:
+\begin{enumerate}
+    \item \textbf{Investigación de IA frente a UI (T2 vs T1):} En la fase de inicio, la complejidad inherente al estudio de los \ac{LLM} y el protocolo \ac{MCP} (T2) supuso un mayor esfuerzo que la definición de interfaces visuales (T1), convirtiendo a la primera en el factor limitante para iniciar el análisis global (T3).
+    \item \textbf{Cadena de dependencia funcional (T9 $\rightarrow$ T11 $\rightarrow$ T12):} Una vez finalizado el módulo de Identidad (T7), el grafo se ramifica. Sin embargo, la rama de mayor profundidad es la que involucra a los agentes autónomos. Para que un agente (T12) pueda operar en el sistema, requiere que el módulo de Proyectos (T9) exista para tener un contexto, y que el módulo de Chats (T11) esté finalizado para disponer de una interfaz de comunicación (\emph{endpoints} y persistencia de mensajes). 
+\end{enumerate}
+
+Por el contrario, el diagrama revela que actividades como el módulo de Organizaciones (T8) o el propio Árbol de Elementos de Trabajo (T10) no forman parte del camino crítico. Aunque son componentes centrales de la aplicación, su desarrollo discurre en paralelo a la rama de los agentes de IA.
+
+Es importante destacar que, aunque con este análisis se ha identificado un camino crítico y módulos o tareas paralelizables, al tratarse de un proyecto individual, la ejecución de las tareas no puede realizarse en paralelo. Por lo tanto, la planificación temporal se ha basado en la secuenciación de los módulos y no en la paralelización de tareas.
+
+\section{Políticas de versionado y gestión del código fuente}
+El control de versiones es un pilar fundamental en la ingeniería de \emph{software} moderna, garantizando la trazabilidad de los cambios, la recuperación ante errores y la organización del trabajo. Para la gestión del código fuente de Leaftask, se ha utilizado Git como sistema de control de versiones distribuido, alojando el repositorio central de forma remota.
+
+\subsection{Modelo teórico y políticas de protección}
+En su concepción teórica, y pensando en la escalabilidad futura hacia un equipo de desarrollo completo, la gestión de ramas se planificó tomando como referencia el estándar \emph{Git Flow} \cite{driessen2010git}. Este modelo define una estructura estricta basada en dos ramas principales de vida infinita y múltiples ramas efímeras:
+\begin{itemize}
+    \item \texttt{main}: Rama principal que contiene exclusivamente código estable, probado y listo para producción. Cada integración en esta rama representa una versión entregable (\emph{release}) al final de un \emph{sprint}.
+    \item \texttt{develop}: Rama de integración continua. Actúa como el tronco principal de trabajo donde se unifican las nuevas funcionalidades antes de pasar a producción.
+    \item \textbf{Ramas de característica (\texttt{feature/*}):} Ramas efímeras creadas a partir de \texttt{develop} para desarrollar tareas individuales del \emph{backlog}.
+\end{itemize}
+
+Bajo este paradigma, se definieron políticas de protección de ramas para evitar la introducción de código inestable. Estas políticas prohíben la subida directa de código a las ramas \texttt{main} y \texttt{develop}, obligando a que cualquier integración se realice mediante una \emph{Pull Request}. En un entorno corporativo, esta solicitud requeriría la revisión y aprobación cruzada de al menos otro desarrollador (\emph{Peer Review}) y la ejecución exitosa de las pruebas automáticas.
+
+\subsection{Adaptación pragmática: \emph{Trunk-Based Development}}
+A pesar de la solidez del modelo teórico planteado, la aplicación estricta de \emph{Git Flow} y la auto-revisión de \emph{Pull Requests} en un proyecto desarrollado por un único individuo introduce una sobrecarga burocrática innecesaria, penalizando la agilidad sin aportar un beneficio real en la detección de errores.
+
+Por este motivo, durante la fase de ejecución, la política de versionado se adaptó hacia un enfoque más pragmático inspirado en \emph{Trunk-Based Development}. Las reglas operativas aplicadas fueron las siguientes:
+\begin{itemize}
+    \item \textbf{Integración directa en desarrollo:} La rama \texttt{develop} se utilizó como el tronco único de trabajo diario (\emph{trunk}). Los incrementos de código, correspondientes a las tareas del \emph{sprint}, se integraron directamente sobre esta rama mediante \emph{commits} atómicos y descriptivos, omitiendo la creación constante de ramas \texttt{feature/*}.
+    \item \textbf{Validación local continua:} Al eliminar la barrera de las \emph{Pull Requests} intermedias, la responsabilidad de mantener la estabilidad de \texttt{develop} recayó en la ejecución local y continua de la batería de pruebas unitarias antes de cada \emph{commit}.
+    \item \textbf{Entregables por iteración:} Al finalizar cada iteración, y tras la revisión del \emph{sprint} y comprobar la integridad del sistema, la rama \texttt{develop} se fusionó (\emph{merge}) con la rama \texttt{main}. Esta fusión generó incrmentos estables sobre la rama \texttt{main}, manteniendo así la filosofía de entrega continua.
+\end{itemize}
