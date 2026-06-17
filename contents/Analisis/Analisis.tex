@@ -474,4 +474,21 @@ Este módulo gestiona la información relacionada con los agentes de \ac{IA} que
 \end{figure}
 
 \subsubsection{Modelo de Notificaciones}
-TODO
+Este módulo gestiona la información relacionada con las notificaciones enviadas a los usuarios, además de la aceptación de solicitudes de aprobación para acciones que requieren cierto nivel de permisos. Incluye las entidades:
+
+\begin{itemize}
+    \item \textbf{\emph{project\_permission\_readmodels}:} Almacena información de lectura de los permisos de proyecto, para conocer los permisos de cada usuario en cada proyecto y poder determinar si una approval request le afecta o no.
+    \item \textbf{\emph{organization\_permission\_readmodels}:} Almacena información de lectura de los permisos de organización, para conocer los permisos de cada usuario en cada organización y poder determinar si una approval request le afecta o no.
+    \item \textbf{\emph{user\_readmodels}:} Almacena información de lectura de los usuarios para relacionarlos con las notificaciones que reciben, las que envían, las solicitudes de aprobación que les afectan, y sus comentarios en estas.
+    \item \textbf{\emph{notifications}:} Almacena las notificaciones enviadas a los usuarios, incluyendo el tipo de notificación, el contexto (id de proyecto u organización), y el objetivo (id del elemento que genera la notificación, como un elemento de trabajo, un proyecto, un agente, etc.)
+    \item \textbf{\emph{approval\_requests}:} Almacena las solicitudes de aprobación generadas para acciones que requieren validación, incluyendo el estado, el tipo de contexto (proyecto u organización), el id del contexto, el id del elemento que genera la solicitud, el tipo de acción que se solicita aprobar (o nombre de la operación) y el payload con la información para realizar esa acción automáticamente si la solicitud es aprobada.
+    \item \textbf{\emph{actions}:} Almacena las acciones que se pueden ejecutar automáticamente al aprobar una solicitud de aprobación.
+    \item \textbf{\emph{request\_comments}:} Almacena los comentarios realizados en las solicitudes de aprobación, incluyendo el autor, el contenido y la fecha de creación.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-notifications.png}
+    \caption{\ac{MER} del módulo de Notificaciones}
+    \label{fig:mer_notificaciones}
+\end{figure}
