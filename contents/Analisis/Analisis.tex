@@ -1,15 +1,56 @@
 \chapter{Análisis}
 \label{chap:analisis}
 
+% \section{Interesados}
+% \subsection{Usuarios}
+% Se han identificado dos tipos de usuarios principales para la aplicación: los gestores de proyectos y los miembros del equipo de proyecto. Ambos tipos de usuarios son agrupados bajo el término genérico de "usuario", ya que ambos interactúan con la aplicación, aunque con diferentes objetivos y necesidades.
+
+% \textbf{Gestores:} Son los usuarios encargados de la dirección y supervisión del proyecto. Tienen visión global del proyecto. A nivel de rol, puede ser un \ac{PM} tradicional, pero también puede ser un rol de liderazgo técnico (Tech Lead, Product Owner, Arquitecto de Software, etc.) que asuma responsabilidades de gestión de proyecto.
+
+% \textbf{Miembros del equipo:} Son los usuarios encargados de la ejecución de las tareas del proyecto. Su interés principal en la aplicación es que el overhead de gestión sea mínimo, y que les permita centrarse en su trabajo. A nivel de rol, pueden ser desarrolladores, diseñadores, analistas, incluso agentes de \ac{IA} que colaboren en el proyecto.
+
+% \subsection{Stakeholders?}
+
 \section{Interesados}
-\subsection{Usuarios}
-Se han identificado dos tipos de usuarios principales para la aplicación: los gestores de proyectos y los miembros del equipo de proyecto. Ambos tipos de usuarios son agrupados bajo el término genérico de "usuario", ya que ambos interactúan con la aplicación, aunque con diferentes objetivos y necesidades.
+Para asegurar la viabilidad, adopción y éxito comercial de la plataforma, es fundamental identificar a todas las partes interesadas. El ecosistema no solo influye a las personas que interactúan con la interfaz, sino a entidades, organizaciones y servicios cuyo interés o influencia pueden determinar la viabilidad del producto.
 
-\textbf{Gestores:} Son los usuarios encargados de la dirección y supervisión del proyecto. Tienen visión global del proyecto. A nivel de rol, puede ser un \ac{PM} tradicional, pero también puede ser un rol de liderazgo técnico (Tech Lead, Product Owner, Arquitecto de Software, etc.) que asuma responsabilidades de gestión de proyecto.
+A continuación, se establece una diferenciación clara entre el ecosistema general de interesados y los perfiles de usuario que operan directamente el sistema.
 
-\textbf{Miembros del equipo:} Son los usuarios encargados de la ejecución de las tareas del proyecto. Su interés principal en la aplicación es que el overhead de gestión sea mínimo, y que les permita centrarse en su trabajo. A nivel de rol, pueden ser desarrolladores, diseñadores, analistas, incluso agentes de \ac{IA} que colaboren en el proyecto.
+\subsection{Matriz de interesados}
+En la Tabla \ref{tab:stakeholders} se identifican las principales partes interesadas del producto, evaluando su nivel de influencia sobre el diseño del sistema, su interés principal y la prioridad que se les ha otorgado durante el proceso de análisis de requisitos.
 
-\subsection{Stakeholders?}
+\begin{table}[htbp]
+    \centering
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{@{} p{3cm} c p{6cm} c @{}}
+        \toprule
+        \textbf{Interesado} & \textbf{Influencia} & \textbf{Interés Principal} & \textbf{Prioridad} \\
+        \midrule
+        \textbf{Empresas Cliente (B2B)} & Alta & Aumento de productividad, seguridad y retorno de inversión (ROI). & Alta \\
+        
+        \textbf{Gestores de Proyectos} & Alta & Visibilidad clara del estado del trabajo, reducción de la carga burocrática y facilidades para la coordinación de equipos. & Alta \\
+        
+        \textbf{Miembros del Equipo} & Media & Interfaz intuitiva, mínima fricción en el reporte de tareas y claridad en las dependencias sin exceso de microgestión. & Alta \\
+        
+        \textbf{Proveedores de \ac{IA} y \emph{Cloud}} & Alta & Integración técnica robusta, cumplimiento de los acuerdos de nivel de servicio (SLA) y consumo eficiente de cuotas de API. & Media \\
+        
+        \textbf{Productos Competidores} & Media & Retención de cuota de mercado, comparación de funcionalidades y estándares de Experiencia de Usuario (UX). & Baja \\
+        \bottomrule
+    \end{tabular}
+    \caption{Matriz de identificación y priorización de partes interesadas.}
+    \label{tab:stakeholders}
+\end{table}
+
+\subsection{Usuarios del sistema}
+Dentro del grupo de interesados con prioridad alta, se extraen los actores que interactúan de forma directa y continua con el \emph{software}. Estos usuarios se agrupan en tres perfiles operativos principales:
+
+\begin{itemize}
+    \item \textbf{Gestores y Liderazgo Técnico:} Usuarios encargados de la dirección, planificación y supervisión operativa. Este perfil engloba a \emph{Project Managers}, \emph{Product Owners} y Arquitectos de \emph{Software}. Sus objetivos principales dentro de la herramienta son la configuración de los proyectos, la gestión de roles y accesos, y la detección temprana de cuellos de botella mediante la vista del Árbol de Trabajo.
+    
+    \item \textbf{Miembros del equipo:} Profesionales encargados de la ejecución técnica o creativa de las tareas (desarrolladores, diseñadores, analistas, etc.). Su interacción con el sistema se basa en el consumo de información (qué hacer y en qué orden) y en la actualización del estado de los elementos de trabajo. Requieren una experiencia libre de fricciones para poder concentrarse en el trabajo de valor.
+    
+    \item \textbf{Agentes de \ac{IA}:} A diferencia de los sistemas tradicionales, la arquitectura de Leaftask eleva a los agentes de IA a la categoría de actores de primer nivel. Estos entes interactúan con la plataforma de manera análoga a un usuario humano: ejecutan acciones mediante herramientas (\emph{Tools}), leen el progreso de otros usuarios, actualizan estados y se comunican a través de los chats del proyecto.
+\end{itemize}
 
 \section{Especificación funcional}
 La especificación de los requisitos funcionales se ha realizado con la técnica de historias de usuario, que permite describir las funcionalidades de la aplicación desde la perspectiva del usuario final. Cada historia de usuario se ha formulado siguiendo el formato:
