@@ -1,0 +1,83 @@
+\chapter{Desarrollo}
+\label{chap:desarrollo}
+
+En este capítulo se expone el proceso de implementación, estructurado cronológicamente a través de los \emph{sprints} de desarrollo definidos en la planificación. Para cada iteración, se detallan los objetivos, los obstáculos e imprevistos encontrados durante la codificación, las adaptaciones arquitectónicas adoptadas para solventarlos y, finalmente, los resultados obtenidos que conforman cada incremento funcional del producto. Se omitirán las decisiones estáticas ya definidas en el capítulo de Diseño, centrándose exclusivamente en la evolución y adaptación del código.
+
+\section{\emph{Sprint 4} - Base del proyecto y autenticación}
+Este \emph{sprint} marcó el inicio del desarrollo efectivo del \emph{software}. Los esfuerzos se centraron en materializar la infraestructura base, establecer la estructura de directorios, configurar la conexión a la base de datos y programar el módulo de Identidad, incluyendo el flujo de autenticación mediante delegación OAuth2.
+
+\subsection{Problemas encontrados}
+Durante la inicialización del proyecto, la configuración del contenedor de Inyección de Dependencias de .NET y la implementación del bus de comandos requirió un esfuerzo de investigación superior al estimado. Específicamente, lograr que el sistema de \emph{Pipeline Behaviors} de la biblioteca \texttt{MediatR} interceptara correctamente las peticiones para aplicar validaciones transversales (como el \emph{Logging} y \emph{FluentValidation}) de forma genérica exigió la elaboración de varias pruebas para asegurar que no se rompiera la tipación estricta del patrón CQRS. A pesar de este incremento en la carga de trabajo, se lograron cumplir los objetivos de la iteración.
+
+\subsection{Decisiones y adaptaciones implementadas}
+Durante el paso del diseño teórico a la implementación real, surgieron fricciones que obligaron a adaptar ciertas decisiones arquitectónicas:
+\begin{itemize}
+    \item \textbf{Adopción del patrón \emph{Factory} para \emph{Refresh Tokens}:} En la fase de diseño, se estableció que la creación de agregados delegaría exclusivamente en métodos estáticos \texttt{Create} dentro de la propia entidad. Sin embargo, al codificar la generación de \emph{Refresh Tokens}, surgió la necesidad de aplicar políticas de caducidad dinámicas extraídas de la configuración del entorno (\emph{appsettings.json}). Dado que inyectar servicios o configuraciones directamente en una entidad de dominio viola flagrantemente los principios de \ac{DDD}, se decidió abstraer este proceso implementando una clase \texttt{RefreshTokenFactory}. Esta fábrica centraliza la inyección de la interfaz \texttt{IRefreshTokenExpirationPolicy}, resolviendo el acoplamiento y manteniendo la entidad pura.
+    
+    \begin{lstlisting}[style=CSharp, caption={Implementación del patrón Factory delegando logicas de expiracion.}, label={lst:factory_token}]
+public class RefreshTokenFactory(IRefreshTokenExpirationPolicy policy) : IRefreshTokenFactory
+{
+    public RefreshToken CreateForUser(Guid userId)
+    {
+        // La fabrica obtiene la politica de expiracion inyectada dinamicamente
+        TimeSpan duration = policy.ExpirationDuration;
+        return RefreshToken.Create(userId, duration);
+    }
+}
+    \end{lstlisting}
+    
+    \item \textbf{Intercepción del ciclo de vida en \emph{Entity Framework}:} Al implementar el patrón \emph{Outbox} diseñado, el reto radicaba en asegurar que la escritura de los eventos de dominio en base de datos ocurriera en la misma transacción atómica que las mutaciones de negocio. En lugar de forzar a la capa de Aplicación a abrir y cerrar transacciones manualmente, se tomó la decisión de intervenir el motor de persistencia sobrescribiendo el método \texttt{SaveChangesAsync} del \texttt{DbContext}. Con esta adaptación, el sistema rastrea automáticamente las entidades modificadas justo antes del \emph{commit}, extrae sus eventos internos y los serializa en la tabla del \emph{Outbox} de forma totalmente transparente para los casos de uso.
+    \begin{lstlisting}[style=CSharp, caption={Sobrescritura de SaveChangesAsync para persistir eventos de dominio.}, label={lst:savechanges}]
+public override async Task<int> SaveChangesAsync()
+{
+    List<IDomainEvent> domainEvents = GetDomainEvents();
+
+    await domainEventsDispatcher.DispatchAsync(domainEvents, cancellationToken);
+
+    InsertOutboxMessages(domainEvents);
+
+    return await base.SaveChangesAsync(cancellationToken);
+}
+    \end{lstlisting}
+
+    \item \textbf{Patrón Specification para consultas complejas:} Durante la implementación de la capa de Infraestructura, se identificó que ciertas consultas a la base de datos requerían criterios de filtrado dinámicos y combinables, así como la inclusión condicional de relaciones. Para evitar la creación de múltiples métodos de repositorio con firmas similares (GetById, GetByEmail, GetByNameWithRelations, etc.), se adoptó el patrón \emph{Specification}. Este patrón permite encapsular la lógica de filtrado en objetos reutilizables, facilitando la composición de criterios.
+    
+    \begin{lstlisting}[style=CSharp, caption={Implementación del patrón Specification para la capa de persistencia de datos.}, label={lst:specification_pattern}]
+public abstract class BaseSpecification<T>(Expression<Func<T, bool>> criteria) 
+    : ISpecification<T>
+{
+    private readonly List<Expression<Func<T, object>>> _includes = [];
+    public Expression<Func<T, bool>> Criteria { get; } = criteria;
+    public IReadOnlyCollection<Expression<Func<T, object>>> Includes 
+        => _includes.AsReadOnly();
+        
+    protected void AddInclude(Expression<Func<T, object>> expr) 
+        => _includes.Add(expr);
+}
+
+// Especificacion concreta que encapsula la logica de filtrado e inclusion
+public sealed class UserWithActiveRefreshTokensSpecification 
+    : BaseSpecification<User>
+{
+    public UserWithActiveRefreshTokensSpecification(Guid userId)
+        : base(user => user.Id == userId)
+    {
+        AddInclude(user => user.RefreshTokens
+            .Where(rt => rt.RevokedAt == null && rt.ExpiresAt > DateTime.UtcNow));
+    }
+}
+    \end{lstlisting}
+
+\end{itemize}
+
+\subsection{Resultados obtenidos}
+Al finalizar el \emph{sprint}, se consolidó una base de código compilable, fuertemente tipada y lista para soportar la lógica de negocio. A nivel funcional, se implementó con éxito un flujo de autenticación, integrando con \emph{Google OAuth}, el \emph{backend} verifica las credenciales, emite correctamente las credenciales JWT y las \emph{cookies} de refresco. Esta iteración cerró la infraestructura transversal, permitiendo que los desarrollos posteriores se enfocaran estrictamente en los procesos de negocio.
+
+Fijandonos en la base del \emph{frontend}, se estableció el proyecto base de React, configurando la estructura de carpetas, soportando internacionalización, modo claro/oscuro y una base de componentes reutilizables. Se implementó un flujo de inicio de sesión completo con \emph{Google OAuth}, incluyendo la gestión de \emph{cookies} de sesión y la redirección a la página principal tras la autenticación exitosa o a la página de inicio de sesión (ver Figura \ref{fig:login-page}) en caso de error. 
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/Content/Desarrollo/login-page.png}
+    \caption{Pantalla de inicio de sesión con Google OAuth.}
+    \label{fig:login-page}
+\end{figure}

@@ -208,9 +208,11 @@ El proceso completo, ilustrado en la Figura \ref{fig:sequence-auth}, se divide e
 \end{figure}
 
 \section{Patrones de diseño}
-Durante el desarrollo del código fuente, se ha aplicado de forma sistemática un conjunto de patrones de diseño orientados a objetos. Muchos de estos son los patrones clásicos de diseño de software \cite{gamma1994design}, proporcionan soluciones probadas y estandarizadas a problemas recurrentes de diseño de software. Su aplicación no solo resuelve retos técnicos de bajo nivel, sino que establece un vocabulario común y facilita la mantenibilidad, extensibilidad y legibilidad del código.
+Para mantener una arquitectura sólida, se aplican forma sistemática un conjunto de patrones de diseño orientados a objetos. Muchos de estos son los patrones clásicos de diseño de software \cite{gamma1994design}, proporcionan soluciones probadas y estandarizadas a problemas recurrentes de diseño de software. Su aplicación no solo resuelve retos técnicos de bajo nivel, sino que establece un vocabulario común y facilita la mantenibilidad, extensibilidad y legibilidad del código.
 
 Con el fin de estructurar su análisis, los patrones implementados se han clasificado en tres categorías fundamentales, de acuerdo con su propósito principal dentro de la arquitectura del sistema: patrones creacionales, estructurales y de comportamiento.
+
+Durante el desarrollo, se han aplicado algunos más que se detallan más adelante, pero los que se presentan a continuación son los más representativos y diseñados de forma explícita desde un inicio.
 
 \subsection{Patrones creacionales}
 Los patrones creacionales abstraen el proceso de instanciación de los objetos, ocultando la lógica de creación. En el contexto de la aplicación, se han aplicado diversas variantes de estos patrones adaptadas tanto al paradigma orientado a objetos del \emph{backend} como al paradigma funcional del \emph{frontend}.
@@ -238,56 +240,39 @@ public sealed class User : Entity
 }
 \end{lstlisting}
 
-\subsubsection{Factory (Desacoplamiento de Políticas)}
-Para la creación de objetos cuya inicialización depende de configuraciones externas o servicios de infraestructura, se ha aplicado el patrón \emph{Factory} clásico mediante clases dedicadas. Este enfoque separa la responsabilidad de crear un objeto de la lógica que decide cómo debe configurarse.
+% \subsubsection{Factory Function (Adaptadores de UI en Frontend)}
+% En el entorno del \emph{frontend}, dominado por React y el paradigma de la programación funcional, el concepto de fábrica se ha adaptado utilizando Funciones de Orden Superior (\emph{Higher-Order Functions}). 
 
-Un ejemplo claro en la plataforma es \texttt{RefreshTokenFactory}. Esta fábrica centraliza la construcción de tokens de sesión, pero delega la política de expiración a una interfaz inyectada (\texttt{IRefreshTokenExpirationPolicy}). Gracias a esta inversión de dependencias, la duración de los tokens puede variar dinámicamente (por ejemplo, según el entorno de despliegue o regulaciones de seguridad) sin necesidad de modificar la fábrica ni la lógica de negocio.
+% El patrón \emph{Factory Function} se utiliza para resolver la necesidad de crear mapeadores de datos que requieren dependencias previas (como diccionarios o catálogos). La función \texttt{makeProjectNodeAdapter} actúa como una fábrica: recibe los catálogos de tipos y estados una sola vez y retorna una nueva función pura. Esta función resultante (\texttt{WorkItemData $\rightarrow$ NodeVisual}) puede ser reutilizada de forma masiva y eficiente por la capa de presentación para transformar los datos del servidor en nodos visuales para el Árbol de Trabajo.
 
-\begin{lstlisting}[style=CSharp, caption={Implementación del patrón Factory delegando logicas de expiracion.}, label={lst:factory_token}]
-public class RefreshTokenFactory(IRefreshTokenExpirationPolicy policy) : IRefreshTokenFactory
-{
-    public RefreshToken CreateForUser(Guid userId)
-    {
-        // La fabrica obtiene la politica de expiracion inyectada dinamicamente
-        TimeSpan duration = policy.ExpirationDuration;
-        return RefreshToken.Create(userId, duration);
-    }
-}
-\end{lstlisting}
-
-\subsubsection{Factory Function (Adaptadores de UI en Frontend)}
-En el entorno del \emph{frontend}, dominado por React y el paradigma de la programación funcional, el concepto de fábrica se ha adaptado utilizando Funciones de Orden Superior (\emph{Higher-Order Functions}). 
-
-El patrón \emph{Factory Function} se utiliza para resolver la necesidad de crear mapeadores de datos que requieren dependencias previas (como diccionarios o catálogos). La función \texttt{makeProjectNodeAdapter} actúa como una fábrica: recibe los catálogos de tipos y estados una sola vez y retorna una nueva función pura. Esta función resultante (\texttt{WorkItemData $\rightarrow$ NodeVisual}) puede ser reutilizada de forma masiva y eficiente por la capa de presentación para transformar los datos del servidor en nodos visuales para el Árbol de Trabajo.
-
-\begin{lstlisting}[style=TypeScript, caption={Implementación de Factory Function mediante clausuras en TypeScript.}, label={lst:factory_frontend}]
-export const makeProjectNodeAdapter = (
-  types: WorkItemTypeData[],
-  statuses: WorkItemStatusData[]) => {
+% \begin{lstlisting}[style=TypeScript, caption={Implementación de Factory Function mediante clausuras en TypeScript.}, label={lst:factory_frontend}]
+% export const makeProjectNodeAdapter = (
+%   types: WorkItemTypeData[],
+%   statuses: WorkItemStatusData[]) => {
     
-  // Retorna una funcion pura pre-configurada gracias al closure
-  return (raw: WorkItemData): NodeVisual => {
-    const typeName = types.find((t) => t.id === raw.typeId)?.name ?? 'Task';
-    const color = STATUS_COLORS[
-        statuses.find((s) => s.id === raw.statusId)?.name ?? ''
-    ] ?? DEFAULT_COLOR;
+%   // Retorna una funcion pura pre-configurada gracias al closure
+%   return (raw: WorkItemData): NodeVisual => {
+%     const typeName = types.find((t) => t.id === raw.typeId)?.name ?? 'Task';
+%     const color = STATUS_COLORS[
+%         statuses.find((s) => s.id === raw.statusId)?.name ?? ''
+%     ] ?? DEFAULT_COLOR;
     
-    return { 
-        title: raw.code, 
-        subtitle: raw.title, 
-        color, 
-        shape: typeName === 'Bug' ? 'spike' : 'circle',
-        // ...
-    };
-  };
-}
-\end{lstlisting}
+%     return { 
+%         title: raw.code, 
+%         subtitle: raw.title, 
+%         color, 
+%         shape: typeName === 'Bug' ? 'spike' : 'circle',
+%         // ...
+%     };
+%   };
+% }
+% \end{lstlisting}
 
 \subsection{Patrones estructurales}
 Los patrones estructurales se centran en cómo las clases y objetos se componen para formar estructuras más grandes y complejas, garantizando que el sistema sea flexible y eficiente.
 
 \subsubsection{Decorator (Comportamientos de canalización con MediatR)}
-El patrón \emph{Decorator} permite añadir responsabilidades dinámicamente a un objeto envolviéndolo en otro objeto con la misma interfaz, sin alterar su código fuente. En el \emph{backend}, este patrón se ha materializado a través de los \emph{Pipeline Behaviors} de la biblioteca MediatR.
+El patrón \emph{Decorator} permite añadir responsabilidades dinámicamente a un objeto envolviéndolo en otro objeto con la misma interfaz, sin alterar su código fuente. En el \emph{backend}, este patrón se ha materializado a través de los \emph{Pipeline Behaviors} de la biblioteca \texttt{MediatR}.
 
 La interfaz \texttt{IPipelineBehavior<TRequest, TResponse>} permite encadenar capas de ejecución alrededor de cada manejador (\emph{handler}) de casos de uso. De este modo, se ejecutan operaciones transversales de forma secuencial: primero la trazabilidad y medición de tiempos (\emph{Logging}), seguido de la validación estructural (\emph{FluentValidation}) y, finalmente, la autorización. Cada comportamiento cede el control a la siguiente capa mediante la invocación de \texttt{next()}, manteniendo a los casos de uso completamente agnósticos respecto a estas validaciones externas.
 
@@ -399,37 +384,6 @@ export const ApiGateway = {
 
 // Uso simplificado desde cualquier componente:
 // ApiGateway.workItem.management.createWorkItem(projectId, payload)
-\end{lstlisting}
-
-\subsubsection{Specification (Encapsulamiento de Consultas)}
-El patrón \emph{Specification}, derivado de las prácticas de \ac{DDD}, encapsula un criterio de consulta y las reglas de negocio asociadas en un objeto tipado, reutilizable y fácilmente testeable.
-
-En lugar de dispersar sentencias de filtrado (\texttt{Where}) y carga ansiosa (\texttt{Include}) a lo largo de los repositorios o manejadores, se define una clase base \texttt{BaseSpecification<T>} que establece el contrato. Las especificaciones concretas, como \texttt{UserWithActiveRefreshTokensSpecification}, heredan de esta base y configuran semánticamente las expresiones condicionales necesarias. Esto garantiza el principio de Responsabilidad Única y permite construir consultas compuestas de alta complejidad de forma declarativa y segura ante refactorizaciones.
-
-\begin{lstlisting}[style=CSharp, caption={Implementación del patrón Specification para la capa de persistencia de datos.}, label={lst:specification_pattern}]
-public abstract class BaseSpecification<T>(Expression<Func<T, bool>> criteria) 
-    : ISpecification<T>
-{
-    private readonly List<Expression<Func<T, object>>> _includes = [];
-    public Expression<Func<T, bool>> Criteria { get; } = criteria;
-    public IReadOnlyCollection<Expression<Func<T, object>>> Includes 
-        => _includes.AsReadOnly();
-        
-    protected void AddInclude(Expression<Func<T, object>> expr) 
-        => _includes.Add(expr);
-}
-
-// Especificacion concreta que encapsula la logica de filtrado e inclusion
-public sealed class UserWithActiveRefreshTokensSpecification 
-    : BaseSpecification<User>
-{
-    public UserWithActiveRefreshTokensSpecification(Guid userId)
-        : base(user => user.Id == userId)
-    {
-        AddInclude(user => user.RefreshTokens
-            .Where(rt => rt.RevokedAt == null && rt.ExpiresAt > DateTime.UtcNow));
-    }
-}
 \end{lstlisting}
 
 \subsection{Patrones de comportamiento}
@@ -580,34 +534,34 @@ export const useProjectWorkItemsQuery = (projectId: string | null) => {
 };
 \end{lstlisting}
 
-\subsubsection{Chain of Responsibility (Canalización de Autorizaciones)}
-El patrón \emph{Chain of Responsibility} permite que una petición pase por una cadena de manejadores secuenciales, donde cualquiera de ellos puede detener el flujo si no se cumplen ciertas condiciones. En el sistema de autorización, \texttt{OrganizationPermissionBehavior} ejecuta una cadena de validaciones lógicas: verifica la existencia de la organización, la disponibilidad del permiso, la membresía del usuario y, finalmente, su nivel de acceso.
+% \subsubsection{Chain of Responsibility (Canalización de Autorizaciones)}
+% El patrón \emph{Chain of Responsibility} permite que una petición pase por una cadena de manejadores secuenciales, donde cualquiera de ellos puede detener el flujo si no se cumplen ciertas condiciones. En el sistema de autorización, \texttt{OrganizationPermissionBehavior} ejecuta una cadena de validaciones lógicas: verifica la existencia de la organización, la disponibilidad del permiso, la membresía del usuario y, finalmente, su nivel de acceso.
 
-\begin{lstlisting}[style=CSharp, caption={Validación en cascada mediante Chain of Responsibility.}, label={lst:chain_pattern}]
-public sealed class OrganizationPermissionBehavior<TRequest, TResponse>(...) 
-    : IPipelineBehavior<TRequest, TResponse>
-{
-    public async Task<TResponse> Handle(TRequest request, 
-        RequestHandlerDelegate<TResponse> next, CancellationToken ct)
-    {
-        // [...] Extraccion de la configuracion de permisos requeridos
+% \begin{lstlisting}[style=CSharp, caption={Validación en cascada mediante Chain of Responsibility.}, label={lst:chain_pattern}]
+% public sealed class OrganizationPermissionBehavior<TRequest, TResponse>(...) 
+%     : IPipelineBehavior<TRequest, TResponse>
+% {
+%     public async Task<TResponse> Handle(TRequest request, 
+%         RequestHandlerDelegate<TResponse> next, CancellationToken ct)
+%     {
+%         // [...] Extraccion de la configuracion de permisos requeridos
         
-        Organization? org = await organizationRepository
-            .GetByIdAsync(permissionRequest.OrganizationId, ct);
-        if (org is null) return CreateFailureResponse(OrganizationNotFound); // Corta la cadena
+%         Organization? org = await organizationRepository
+%             .GetByIdAsync(permissionRequest.OrganizationId, ct);
+%         if (org is null) return CreateFailureResponse(OrganizationNotFound); // Corta la cadena
 
-        OrganizationInvitation? invitation = org.Invitations
-            .FirstOrDefault(inv => inv.UserId == userContext.UserId);
-        if (invitation is null) return CreateFailureResponse(OrganizationMembershipRequired);
+%         OrganizationInvitation? invitation = org.Invitations
+%             .FirstOrDefault(inv => inv.UserId == userContext.UserId);
+%         if (invitation is null) return CreateFailureResponse(OrganizationMembershipRequired);
 
-        // [...] Evaluacion del nivel del rol
-        if (rolePermission?.Level == PermissionLevel.Full) 
-            return await next(ct); // Autorizado: pasa el control al siguiente eslabon
+%         // [...] Evaluacion del nivel del rol
+%         if (rolePermission?.Level == PermissionLevel.Full) 
+%             return await next(ct); // Autorizado: pasa el control al siguiente eslabon
             
-        return CreateFailureResponse(OrganizationPermissionDenied);
-    }
-}
-\end{lstlisting}
+%         return CreateFailureResponse(OrganizationPermissionDenied);
+%     }
+% }
+% \end{lstlisting}
 
 \subsubsection{Command (Mutaciones en Frontend)}
 El patrón \emph{Command} encapsula una solicitud y sus efectos secundarios como un objeto independiente. En el \emph{frontend}, las mutaciones de React Query actúan como comandos puros: agrupan la llamada a la \ac{API}, el manejo de errores, la invalidación de la caché local y la retroalimentación visual al usuario en una unidad funcional encapsulada.
@@ -661,23 +615,6 @@ services.AddScoped<IUserSeederStrategy>(
         ? _ => new DevelopmentUserSeeder() 
         : _ => new ProductionUserSeeder());
 \end{lstlisting}
-
-\subsubsection{Template Method (Ganchos de Consulta Uniformes)}
-El patrón \emph{Template Method} define el esqueleto de un algoritmo, delegando la implementación de ciertos pasos a subclases o instancias específicas. En los \emph{hooks} de consulta del cliente, se define una plantilla inmutable (comprobación de identidad $\rightarrow$ asignación de clave $\rightarrow$ llamada de red $\rightarrow$ condición de activación) aplicable a todos los recursos del dominio, especializando únicamente las propiedades locales.
-
-\begin{lstlisting}[style=TypeScript, caption={Estructura Template Method aplicada a los custom hooks de React.}, label={lst:template_method_pattern}]
-// Plantilla estructural que todos los query hooks del dominio replican
-export const use[Domain]Query = (id: string | null) => {
-  const accessToken = useAuthStore((state) => state.accessToken);
-
-  return useQuery({
-    queryKey: QueryKeys.[domain].list(id ?? ''),       // Paso variable
-    queryFn: () => ApiGateway.[domain].get(id!),       // Paso variable
-    enabled: Boolean(accessToken && id),               // Condicion comun
-  });
-};
-\end{lstlisting}
-
 
 \section{Diseño de la interfaz de usuario}
 El diseño de la \ac{UI} de Leaftask se concibió con el objetivo principal de ofrecer una experiencia fluida y reducir la carga cognitiva del usuario al enfrentarse a un sistema con alta densidad de información (gestión de proyectos jerárquicos e interacciones con inteligencia artificial) \cite{sweller1988cognitive}. Para lograr esto, se establecieron patrones de interacción consistentes que priman la claridad y el pragmatismo sobre la ornamentación visual.
