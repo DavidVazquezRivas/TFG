@@ -96,6 +96,13 @@ Para lograr una correcta separación de responsabilidades dentro de cada módulo
     \item \textbf{Capa de datos:} Encargada de abstraer y gestionar toda la comunicación asíncrona con el \emph{backend} mediante llamadas a la \ac{API} REST. Está formada por tres elementos principales: el cliente \ac{HTTP} base; el cliente \ac{API}, que actúa como un patrón \emph{Facade} \cite{gamma1994design} exponiendo métodos tipados y específicos para cada uno de los \emph{endpoints}; y finalmente el componente de \emph{queries}, que utiliza la biblioteca React Query \cite{tanstackquery} para optimizar el ciclo de vida de las peticiones, gestionando de forma eficiente el estado asíncrono, la caché de datos y la invalidación de la misma.
 \end{itemize}
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/content/Diseño/level3-frontend.png}
+    \caption{Diagrama de componentes del \emph{frontend}}
+    \label{fig:diagrama_componentes_frontend}
+\end{figure}
+
 \section{Patrón de despliegue}
 En el contexto académico actual del proyecto, se ha tomado la decisión arquitectónica de establecer un entorno de despliegue pragmático y acotado. Desplegar una arquitectura distribuida en servicios \emph{cloud} de alta disponibilidad excedería los objetivos, el presupuesto y el marco temporal de esta fase de desarrollo. Por tanto, el patrón de despliegue se centra en la contenerización para asegurar un entorno de integración local robusto e idéntico para todos los evaluadores, combinado con un alojamiento estático para el cliente web de Leaftask.
 
