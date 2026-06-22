@@ -342,7 +342,7 @@ Siguiendo el enfoque de \ac{DDD}\cite{evans2004ddd}, se ha diseñado un modelo c
 Dada la amplitud de la información que maneja el sistema, el modelo de datos no se presenta mediante un diagrama global. En su lugar, se ha segmentado haciendo corresponder los diagramas \ac{MER} con los \emph{Bounded Contexts} previamente identificados. Esta agrupación lógica agiliza la comprensión de los datos y asegura que cada módulo analizado mantenga una alta cohesión en torno a su contexto de negocio específico.
 
 \subsubsection{Modelo de Usuarios y Identidad}
-Este módulo es responsable de gestionar la información relacionada con los usuarios, su autenticación y sus estadísticas. Incluye las entidades:
+Este módulo es responsable de gestionar la información relacionada con los usuarios, su autenticación y sus estadísticas (ver Figura \ref{fig:mer-usuarios}). Incluye las entidades:
 \begin{itemize}
     \item \textbf{\emph{refresh\_tokens}:} Almacena los tokens de refresco generados para los usuarios, es importante persistirlos para poder invalidarlos en caso de compromiso de la cuenta.
     \item \textbf{\emph{users}:} Almacena la información básica de los usuarios, como su nombre, correo electrónico, rol y zona horaria.
@@ -356,11 +356,11 @@ Este módulo es responsable de gestionar la información relacionada con los usu
     \centering
     \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-users.png}
     \caption{\ac{MER} del módulo de Usuarios e Identidad}
-    \label{fig:mer_usuarios}
+    \label{fig:mer-usuarios}
 \end{figure}
 
 \subsubsection{Módulo de Organizaciones}
-Este módulo gestiona la información relacionada con las organizaciones, sus miembros y roles. Incluye las entidades:
+Este módulo gestiona la información relacionada con las organizaciones, sus miembros y roles (ver Figura \ref{fig:mer-organizaciones}). Incluye las entidades:
 \begin{itemize}
     \item \textbf{\emph{organizations}:} Almacena la información básica de las organizaciones, como su nombre, descripción y website.
     \item \textbf{\emph{organization\_invitations}:} Almacena las invitaciones enviadas a usuarios para unirse a una organización, incluyendo el estado de la invitación. Los miembros activos de la organización, son los que tienen una invitación en estado aceptada.
@@ -374,11 +374,11 @@ Este módulo gestiona la información relacionada con las organizaciones, sus mi
     \centering
     \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-organizations.png}
     \caption{\ac{MER} del módulo de Organizaciones}
-    \label{fig:mer_organizaciones}
+    \label{fig:mer-organizaciones}
 \end{figure}
 
 \subsubsection{Módulo de Proyectos}
-Este módulo gestiona la información relacionada con los proyectos, sus miembros, roles, elementos de trabajo y otras configuraciones específicas de cada proyecto. Incluye las entidades:
+Este módulo gestiona la información relacionada con los proyectos, sus miembros, roles, elementos de trabajo y otras configuraciones específicas de cada proyecto (ver Figura \ref{fig:mer-proyectos}). Incluye las entidades:
 \begin{itemize}
     \item \textbf{\emph{projects}:} Almacena la información básica de los proyectos, como su nombre, abreviación, privacidad, etc.
     \item \textbf{\emph{organization\_readmodels}:} Almacena información de lectura de las organizaciones para conocer la relación entre proyectos y organizaciones.
@@ -401,11 +401,11 @@ Este módulo gestiona la información relacionada con los proyectos, sus miembro
     \centering
     \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-projects.png}
     \caption{\ac{MER} del módulo de Proyectos}
-    \label{fig:mer_proyectos}
+    \label{fig:mer-proyectos}
 \end{figure}
 
 \subsubsection{Módulo de Elementos de Trabajo}
-Este módulo gestiona la información relacionada con los elementos de trabajo, sus estados, responsables etc. Incluye las entidades:
+Este módulo gestiona la información relacionada con los elementos de trabajo, sus estados, responsables etc. (ver Figura \ref{fig:mer-elementos-trabajo}). Incluye las entidades:
 
 \begin{itemize}
     \item \textbf{\emph{work\_items}:} Almacena la información de los elementos de trabajo, como su título, descripción, código, estimación, progreso, etc. Estos son los campos indispensables considerados el núcleo, ya que afectan a la forma de representar los nodos en el árbol de trabajo. Destaca una relación recursiva que permite representar la jerarquía de elementos de trabajo y subtareas.
@@ -427,11 +427,11 @@ Este módulo gestiona la información relacionada con los elementos de trabajo, 
     \centering
     \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-work-items.png}
     \caption{\ac{MER} del módulo de Elementos de Trabajo}
-    \label{fig:mer_elementos_trabajo}
+    \label{fig:mer-elementos-trabajo}
 \end{figure}
 
 \subsubsection{Módulo de Chats}
-Este módulo gestiona la información relacionada con los chats entre usuarios y agentes de \ac{IA}. Incluye las entidades:
+Este módulo gestiona la información relacionada con los chats entre usuarios y agentes de \ac{IA} (ver Figura \ref{fig:mer-chats}). Incluye las entidades:
 
 \begin{itemize}
     \item \textbf{\emph{chats}:} Almacena la información básica de los chats, como su identificador y fecha de creación. 
@@ -446,11 +446,11 @@ Este módulo gestiona la información relacionada con los chats entre usuarios y
     \centering
     \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-chats.png}
     \caption{\ac{MER} del módulo de Chats}
-    \label{fig:mer_chats}
+    \label{fig:mer-chats}
 \end{figure}
 
 \subsubsection{Módulo de Agentes}
-Este módulo gestiona la información relacionada con los agentes de \ac{IA} que colaboran en los proyectos. Incluye las entidades:
+Este módulo gestiona la información relacionada con los agentes de \ac{IA} que colaboran en los proyectos (ver Figura \ref{fig:mer-agentes}). Incluye las entidades:
 
 \begin{itemize}
     \item \textbf{\emph{project\_readmodels}:} Almacena información de lectura de los proyectos para conocer a qué proyecto pertenece un agente.
@@ -470,11 +470,11 @@ Este módulo gestiona la información relacionada con los agentes de \ac{IA} que
     \centering
     \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-agents.png}
     \caption{\ac{MER} del módulo de Agentes}
-    \label{fig:mer_agentes}
+    \label{fig:mer-agentes}
 \end{figure}
 
 \subsubsection{Modelo de Notificaciones}
-Este módulo gestiona la información relacionada con las notificaciones enviadas a los usuarios, además de la aceptación de solicitudes de aprobación para acciones que requieren cierto nivel de permisos. Incluye las entidades:
+Este módulo gestiona la información relacionada con las notificaciones enviadas a los usuarios, además de la aceptación de solicitudes de aprobación para acciones que requieren cierto nivel de permisos (ver Figura \ref{fig:mer-notificaciones}). Incluye las entidades:
 
 \begin{itemize}
     \item \textbf{\emph{project\_permission\_readmodels}:} Almacena información de lectura de los permisos de proyecto, para conocer los permisos de cada usuario en cada proyecto y poder determinar si una approval request le afecta o no.
@@ -490,5 +490,5 @@ Este módulo gestiona la información relacionada con las notificaciones enviada
     \centering
     \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-notifications.png}
     \caption{\ac{MER} del módulo de Notificaciones}
-    \label{fig:mer_notificaciones}
+    \label{fig:mer-notificaciones}
 \end{figure}

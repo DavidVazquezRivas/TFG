@@ -5,7 +5,7 @@
 Para representar la arquitectura de la aplicación, se ha recurrido a diagramas C4 \cite{brownc4model}, que permiten describir el sistema a diferentes niveles de abstracción, desde una visión general hasta los detalles de implementación. A continuación, se detallarán los tres primeros niveles de este modelo, llegando hasta el diagrama de componentes.
 
 \subsection{Diagrama de contexto (Nivel 1)}
-El nivel del diagrama de contexto proporciona una visión general del sistema, mostrnado las interacciones entre el sistema, los usuarios y otros sistemas externos.
+El nivel del diagrama de contexto proporciona una visión general del sistema, mostrnado las interacciones entre el sistema, los usuarios y otros sistemas externos (ver Figura \ref{fig:diagrama-contexto}).
 
 Los principales actores identificados en el diagrama de contexto son:
 \begin{itemize}
@@ -19,11 +19,11 @@ Los principales actores identificados en el diagrama de contexto son:
     \centering
     \includegraphics[width=0.8\textwidth]{images/content/Diseño/level1.png}
     \caption{Diagrama de contexto de la aplicación}
-    \label{fig:diagrama_contexto}
+    \label{fig:diagrama-contexto}
 \end{figure}
 
 \subsection{Diagrama de contenedores (Nivel 2)}
-Descendiendo al siguiente nivel de detalle, el diagrama de contenedores muestra las unidades de ejecución del sistema (aplicaciones, servicios, bases de datos), así como las responsabilidades de cada una y cómo se comunican entre sí.
+Descendiendo al siguiente nivel de detalle, el diagrama de contenedores muestra las unidades de ejecución del sistema (aplicaciones, servicios, bases de datos), así como las responsabilidades de cada una y cómo se comunican entre sí (ver Figura \ref{fig:diagrama_contenedores}).
 
 Los contenedores identificados en el diagrama son:
 \begin{itemize}
@@ -51,7 +51,7 @@ Para garantizar esta autonomía, la comunicación entre los distintos módulos s
 
 El detalle técnico sobre cómo se orquesta esta arquitectura orientada a eventos de la comunicación asíncrona entre módulos se detallará más adelante en este mismo capítulo, donde se ilustrará el proceso apoyándose en un diagrama de secuencia explicativo.
 
-Revisando ahora los componentes que encontramos en este diagrama, observamos:
+Revisando ahora los componentes que encontramos en este diagrama (Figura \ref{fig:diagrama_componentes_backend}), observamos:
 
 \begin{itemize}
   \item \textbf{Módulos:} Un componente referente a cada uno de los módulos identificados, que funcionan de forma independiente.
@@ -77,7 +77,7 @@ La capa de infraestructura se ha estructurado adoptando la topología de la Arqu
 
 Es importante destacar que toda esta estructura se vertebra en torno al Principio de Inversión de Dependencias \cite{martin1996dependency}. La aplicación de este principio asegura que las dependencias a nivel de código fuente apunten hacia el centro del sistema, haciendo que el núcleo de la aplicación sea completamente independiente de las implementaciones tecnológicas concretas de las capas externas.
 
-Además de estos componentes esenciales, cada módulo también incluye un componente de integración, que expone los eventos de integración que el módulo emite para que otros módulos puedan suscribirse a ellos.
+Además de estos componentes esenciales, cada módulo también incluye un componente de integración, que expone los eventos de integración que el módulo emite para que otros módulos puedan suscribirse a ellos (ver Figura \ref{fig:diagrama_componentes_modulo}).
 
 \begin{figure}[htbp]
     \centering
@@ -87,7 +87,7 @@ Además de estos componentes esenciales, cada módulo también incluye un compon
 \end{figure}
 
 \subsubsection{\emph{Frontend}}
-El \emph{frontend} de la plataforma se ha desarrollado como una aplicación web \ac{SPA} utilizando React, lo que permite ofrecer una experiencia de usuario fluida y sin recargas de página. La arquitectura del cliente se aleja de los enfoques clásicos basados en el patrón \ac{MVC}, para adoptar una arquitectura orientada a componentes que se alinea de forma natural con el ecosistema de React. Con el objetivo de mantener una alta cohesión y respetar las fronteras de los \emph{Bounded Contexts} definidos en el dominio, se ha optado por estructurar la aplicación mediante \emph{Vertical Slices} \cite{bogard2018vertical}, priorizando el pragmatismo y la agrupación por funcionalidades en lugar de por capas técnicas.
+El \emph{frontend} de la plataforma se ha desarrollado como una aplicación web \ac{SPA} utilizando React, lo que permite ofrecer una experiencia de usuario fluida y sin recargas de página. La arquitectura del cliente se aleja de los enfoques clásicos basados en el patrón \ac{MVC}, para adoptar una arquitectura orientada a componentes que se alinea de forma natural con el ecosistema de React. Con el objetivo de mantener una alta cohesión y respetar las fronteras de los \emph{Bounded Contexts} definidos en el dominio, se ha optado por estructurar la aplicación mediante \emph{Vertical Slices} \cite{bogard2018vertical}, priorizando el pragmatismo y la agrupación por funcionalidades en lugar de por capas técnicas (ver Figura \ref{fig:diagrama_componentes_frontend}).
 
 Para lograr una correcta separación de responsabilidades dentro de cada módulo, la aplicación se estructura internamente en tres capas principales:
 \begin{itemize}
