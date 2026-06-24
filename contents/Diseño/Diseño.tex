@@ -534,35 +534,6 @@ export const useProjectWorkItemsQuery = (projectId: string | null) => {
 };
 \end{lstlisting}
 
-% \subsubsection{Chain of Responsibility (Canalización de Autorizaciones)}
-% El patrón \emph{Chain of Responsibility} permite que una petición pase por una cadena de manejadores secuenciales, donde cualquiera de ellos puede detener el flujo si no se cumplen ciertas condiciones. En el sistema de autorización, \texttt{OrganizationPermissionBehavior} ejecuta una cadena de validaciones lógicas: verifica la existencia de la organización, la disponibilidad del permiso, la membresía del usuario y, finalmente, su nivel de acceso.
-
-% \begin{lstlisting}[style=CSharp, caption={Validación en cascada mediante Chain of Responsibility.}, label={lst:chain_pattern}]
-% public sealed class OrganizationPermissionBehavior<TRequest, TResponse>(...) 
-%     : IPipelineBehavior<TRequest, TResponse>
-% {
-%     public async Task<TResponse> Handle(TRequest request, 
-%         RequestHandlerDelegate<TResponse> next, CancellationToken ct)
-%     {
-%         // [...] Extraccion de la configuracion de permisos requeridos
-        
-%         Organization? org = await organizationRepository
-%             .GetByIdAsync(permissionRequest.OrganizationId, ct);
-%         if (org is null) return CreateFailureResponse(OrganizationNotFound); // Corta la cadena
-
-%         OrganizationInvitation? invitation = org.Invitations
-%             .FirstOrDefault(inv => inv.UserId == userContext.UserId);
-%         if (invitation is null) return CreateFailureResponse(OrganizationMembershipRequired);
-
-%         // [...] Evaluacion del nivel del rol
-%         if (rolePermission?.Level == PermissionLevel.Full) 
-%             return await next(ct); // Autorizado: pasa el control al siguiente eslabon
-            
-%         return CreateFailureResponse(OrganizationPermissionDenied);
-%     }
-% }
-% \end{lstlisting}
-
 \subsubsection{Command (Mutaciones en Frontend)}
 El patrón \emph{Command} encapsula una solicitud y sus efectos secundarios como un objeto independiente. En el \emph{frontend}, las mutaciones de React Query actúan como comandos puros: agrupan la llamada a la \ac{API}, el manejo de errores, la invalidación de la caché local y la retroalimentación visual al usuario en una unidad funcional encapsulada.
 

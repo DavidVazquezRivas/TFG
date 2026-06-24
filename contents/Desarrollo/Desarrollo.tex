@@ -4,10 +4,10 @@
 En este capítulo se expone el proceso de implementación, estructurado cronológicamente a través de los \emph{sprints} de desarrollo definidos en la planificación. Para cada iteración, se detallan los objetivos, los obstáculos e imprevistos encontrados durante la codificación, las adaptaciones arquitectónicas adoptadas para solventarlos y, finalmente, los resultados obtenidos que conforman cada incremento funcional del producto. Se omitirán las decisiones estáticas ya definidas en el capítulo de Diseño, centrándose exclusivamente en la evolución y adaptación del código.
 
 \section{\emph{Sprint 4} - Base del proyecto y autenticación}
-Este \emph{sprint} marcó el inicio del desarrollo efectivo del \emph{software}. Los esfuerzos se centraron en materializar la infraestructura base, establecer la estructura de directorios, configurar la conexión a la base de datos y programar el módulo de Identidad, incluyendo el flujo de autenticación mediante delegación OAuth2.
+Este \emph{sprint} marcó el inicio del desarrollo. Los esfuerzos se centraron en crear la infraestructura base, configurar la conexión a la base de datos y programar el módulo de Identidad, incluyendo el flujo de autenticación mediante OAuth2.
 
 \subsection{Problemas encontrados}
-Durante la inicialización del proyecto, la configuración del contenedor de Inyección de Dependencias de .NET y la implementación del bus de comandos requirió un esfuerzo de investigación superior al estimado. Específicamente, lograr que el sistema de \emph{Pipeline Behaviors} de la biblioteca \texttt{MediatR} interceptara correctamente las peticiones para aplicar validaciones transversales (como el \emph{Logging} y \emph{FluentValidation}) de forma genérica exigió la elaboración de varias pruebas para asegurar que no se rompiera la tipación estricta del patrón CQRS. A pesar de este incremento en la carga de trabajo, se lograron cumplir los objetivos de la iteración.
+Durante la inicialización del proyecto, la configuración del contenedor de Inyección de Dependencias de .NET y la implementación del bus de comandos requirió un esfuerzo de investigación superior al estimado. Específicamente, lograr que el sistema de \emph{Pipeline Behaviors} de la biblioteca \texttt{MediatR} interceptara correctamente las peticiones para aplicar validaciones transversales (como el \emph{Logging} y \emph{FluentValidation}) de forma genérica exigió la elaboración de varias abstracciones para asegurar que no se rompiera la tipación estricta del patrón CQRS. A pesar de este incremento en la carga de trabajo, se lograron cumplir los objetivos de la iteración.
 
 \subsection{Decisiones y adaptaciones implementadas}
 Durante el paso del diseño teórico a la implementación real, surgieron fricciones que obligaron a adaptar ciertas decisiones arquitectónicas:
@@ -80,4 +80,66 @@ Fijandonos en la base del \emph{frontend}, se estableció el proyecto base de Re
     \includegraphics[width=0.7\textwidth]{images/Content/Desarrollo/login-page.png}
     \caption{Pantalla de inicio de sesión con Google OAuth.}
     \label{fig:login-page}
+\end{figure}
+
+\section{\emph{Sprint 5} - Organizaciones}
+El objetivo de este \emph{sprint} fue implementar la gestión de organizaciones, incluyendo la creación, edición y eliminación de estas. Así como la definición de roles y permisos, la invitación de usuarios y la asignación de estos a las organizaciones. Además de aplicar la gestión de permisos basada en roles para controlar el acceso a las funcionalidades a nivel de organización.
+
+\subsection{Problemas encontrados}
+La mayoría de la funcionalidad de este \emph{sprint} se implementó sin mayores inconvenientes. Sin embargo, surgieron problemas al intentar implementar la validación de permisos a nivel de organización, principalmente por querer diseñar una solución que fuera flexible y escalable, haciendo que no se valide a mano en cada caso de uso, sino que se pueda aplicar de manera transversal, teniendo en cuenta que un usuario puede tener diferentes roles en diferentes organizaciones. Se consiguió resolver mediante la creación de un \emph{Pipeline Behavior} que intercepta los comandos y valida los permisos. Durante este \emph{sprint} quedó resuelto, pero surgieron problemas más adelante que se comentarán en el \emph{sprint} 6, cuando se implementó la gestión de permisos a nivel de proyecto.
+
+\subsection{Decisiones y adaptaciones implementadas}
+No ha habido cambios significativos en la arquitectura durante este \emph{sprint}. Lo que vale la pena destacar es la implementación de un \emph{Pipeline Behavior}, siguiendo el patrón de diseño \emph{Chain of Responsibility}, que permite la validación de permisos de manera transversal a todos los casos de uso. El código de esta validación simplificado se muestra en \ref{lst:permission_validation}.
+
+\begin{lstlisting}[style=CSharp, caption={Validación en cascada mediante Chain of Responsibility.}, label={lst:permission_validation}]
+public sealed class OrganizationPermissionBehavior<TRequest, TResponse>(...) 
+    : IPipelineBehavior<TRequest, TResponse>
+{
+    public async Task<TResponse> Handle(TRequest request, 
+        RequestHandlerDelegate<TResponse> next, CancellationToken ct)
+    {
+        // [...] Extraccion de la configuracion de permisos requeridos
+        
+        Organization? org = await organizationRepository
+            .GetByIdAsync(permissionRequest.OrganizationId, ct);
+        if (org is null) return CreateFailureResponse(OrganizationNotFound); // Corta la cadena
+
+        OrganizationInvitation? invitation = org.Invitations
+            .FirstOrDefault(inv => inv.UserId == userContext.UserId);
+        if (invitation is null) return CreateFailureResponse(OrganizationMembershipRequired);
+
+        // [...] Evaluacion del nivel del rol
+        if (rolePermission?.Level == PermissionLevel.Full) 
+            return await next(ct); // Autorizado: pasa el control al siguiente eslabon
+            
+        return CreateFailureResponse(OrganizationPermissionDenied);
+    }
+}
+\end{lstlisting}
+
+\subsection{Resultados obtenidos}
+Al finalizar el \emph{sprint}, se logró implementar la gestión completa de organizaciones, incluyendo datos básicos, roles y permisos, invitaciones y asignación de usuarios (ver la Figura \ref{fig:organization-results}).
+
+\begin{figure}[ht]
+    \centering
+
+    \begin{subfigure}{0.48\textwidth}
+        \includegraphics[width=\linewidth]{images/Content/Desarrollo/organization-management.png}
+        \caption{Configuración de organizaciones}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.48\textwidth}
+        \includegraphics[width=\linewidth]{images/Content/Desarrollo/organization-roles.png}
+        \caption{Roles de organización}
+    \end{subfigure}
+
+    \medskip
+
+    \begin{subfigure}{0.48\textwidth}
+        \includegraphics[width=\linewidth]{images/Content/Desarrollo/organization-members.png}
+        \caption{Miembros de organización}
+    \end{subfigure}
+
+    \caption{Pestañas de gestión de organizaciones}
+    \label{fig:organization-results}
 \end{figure}
