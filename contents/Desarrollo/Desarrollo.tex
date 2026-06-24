@@ -165,3 +165,23 @@ Como resultado de este \emph{sprint}, se logró implementar la gestión completa
     \caption{Interfaz de creación de campos personalizados para proyectos.}
     \label{fig:project-fields}
 \end{figure}
+
+
+\section{\emph{Sprint 7} - Elementos de trabajo}
+El objetivo de este \emph{sprint} fue implementar la gestión de elementos de trabajo, incluyendo la creación, edición y eliminación de estos, así como registrar el historial de cambios, el trabajo realizado y los comentarios. Además de esto, un reto importante de esta iteración es a nivel de interfaz de usuario, la creación del árbol de elementos de trabajo, que permita visualizar todo el proyecto de forma jerárquica.
+
+\subsection{Problemas encontrados}
+Durante este \emph{sprint} no hubo grandes problemas, temas que no se hubieran previsto y que causaran cambios significativos en la arquitectura. La funcionalidad se implementó sin problemas, teniendo en cuenta que este módulo es el más complejo en cuanto a cantidad de funcionalidades y relaciones entre entidades, pero pocos problemas a nivel técnico.
+
+\subsection{Decisiones y adaptaciones implementadas}
+Cómo se ha comentado, no hubo grandes cambios ni adaptaciones durante el desarrollo de este \emph{sprint}. Lo único que se puede destacar es la implementación del árbol de elementos de trabajo, que se implementó como un componente reutilizable en el \emph{frontend}, con un mapper que transforma los elementos de trabajo en un formato que pueda ser consumido por el componente. Para esto, se utilizó la librería de \texttt{d3-hierarchy} para generar la estructura jerárquica de los elementos de trabajo, que facilita evitando la necesidad de implementar algoritmos complejos para generar el árbol. Añadiendo además la posibilidad de expandir y contraer nodos, y de que estos tengan diferentes características visuales dependiendo de su estado, estimación, tipo, etc.
+
+\subsection{Resultados obtenidos}
+Cómo resultado de este \emph{sprint}, se logró implementar la funcionalidad base de la aplicación, permitiendo ya la gestión completa de elementos de trabajo, y teniendo una vista jerárquica de todo el proyecto, que permite ver de un vistazo la estructura del proyecto, uno de los objetivos principales del proyecto. En la Figura \ref{fig:work-items-tree} se puede ver un ejemplo de esta vista.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/Content/Desarrollo/work-items-tree.png}
+    \caption{Vista de los elementos de trabajo de un proyecto}
+    \label{fig:work-items-tree}
+\end{figure}
