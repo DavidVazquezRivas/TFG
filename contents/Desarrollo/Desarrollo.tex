@@ -185,3 +185,56 @@ Cómo resultado de este \emph{sprint}, se logró implementar la funcionalidad ba
     \caption{Vista de los elementos de trabajo de un proyecto}
     \label{fig:work-items-tree}
 \end{figure}
+
+\section{\emph{Sprint 8} - Chat y inicio de agentes}
+El objetivo principal de este \emph{sprint} fue implementar la funcionalidad de chat, que permite a los usuarios comunicarse entre ellos de forma asíncrona, la interfaz manteniendose reutilizable para hablar con personas o con agentes. Además de esto, se empezó a desarrollar el módulo de agentes, ya que es un módulo muy complejo y se decidió empezar a desarrollarlo en esta iteración, aunque no se completó.
+
+\subsection{Problemas encontrados}
+En lo relativo a la funcionalidad de chat, no hubo problemas, más allá de que para el chat en tiempo real se prescindió de usar \emph{WebSockets} o \emph{SignalR}, y se optó por una solución más sencilla, que consiste en hacer peticiones periódicas al servidor para obtener los mensajes nuevos. Esto se hizo así para simplificar la arquitectura y no tener que implementar un sistema de mensajería en tiempo real, que no era un objetivo principal del proyecto. 
+Por otro lado, en lo relativo al módulo de agentes, no se había planteado la complejidad que suponía el comportamiento "agéntico" permitiendo que los agentes pausen su trabajo, esperen respuestas de los usuarios, y reanuden su trabajo, además de mantener un contexto completo de la conversación.
+
+\subsection{Decisiones y adaptaciones implementadas}
+Como se ha adelantado, para el sistema de mensajería en tiempo real, se ha optado por que el cliente vaya haciendo un \emph{pooling} de mensajes para obtener los nuevos, en lugar de utilizar alguna tecnología que permita la comunicación desde el servidor al cliente.
+Por otro lado, en la implementación del módulo de agentes, se decidió añadir un estado de "suspendido" a los agentes, que permite que estos puedan pausar su trabajo en función de que se produzca un cierto evento de dominio, como por ejemplo que el usuario responda a un mensaje del agente. Esto permite que los agentes puedan esperar a que el usuario responda, y reanudar su trabajo cuando esto ocurra, manteniendo un contexto completo de la conversación. Estas tablas se ven reflejadas en el capítulo de Diseño, tanto en la base de datos, como en el diagrama de secuencia.
+
+\subsection{Resultados obtenidos}
+A nivel funcional, el único resultado de este \emph{sprint} fue la implementación del sistema de chat. El módulo de agentes no se completó, pero se sentaron las bases para su desarrollo en el siguiente \emph{sprint}. En la Figura \ref{fig:chat} se puede ver un ejemplo de la interfaz de chat, en este caso con un agente, pero la interfaz es la misma para hablar con otros usuarios.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/Content/Desarrollo/chat.png}
+    \caption{Vista del chat}
+    \label{fig:chat}
+\end{figure}
+
+
+\section{\emph{Sprint 9} - Agentes y notificaciones}
+En este \emph{sprint} se completa el desarrollo de la aplicación. Implementando los dos módulos restantes, el de agentes y el de notificaciones. Sobre el módulo de agentes, gran parte del trabajo ya se había hecho en el \emph{sprint} anterior, por lo que en esta iteración se completó, y se implementó la funcionalidad de notificaciones junto con las solicitudes de aprobación de diferentes acciones.
+
+\subsection{Problemas encontrados}
+En esta iteración han ocurrido diferentes problemas. Empezando por lo relativo a los agentes, con la base ya implementada, se expusieron todas las \emph{tools} para que estos pudieran interactuar con la aplicación de la misma forma que un usuario, aquí hubo problemas ya que los \emph{Behaviours} de comprobación de permisos y autenticación no estaban preparados para que un agente pudiera interactuar con la aplicación, sino unicamente un usuario con un access token válido. Esto hizo que se tuvieran que modificar esos \emph{Behaviours} desarrollados anteriormente.
+Por otro lado, con las notificaciones, surgieron problemas relacionados con las solicitudes de aprobación, ya que no se había diseñado correctamente para permitir que, una vez se aprueba una solicitud, esa acción se ejecute de forma automática. Si que era un requisito analizado, pero no se había diseñado para ello.
+
+\subsection{Decisiones y adaptaciones implementadas}
+Para solventar los problemas de los agentes, se decidió modificar los \emph{Behaviours}, haciendolos funcionar con el polimorfismo que se planteó en el diseño, pero no estaba aún aplicado en el código. Esto permitió que los agentes pudieran interactuar con la aplicación de la misma forma que un usuario, sin tener que modificar la lógica de negocio.
+En cuanto a las solicitudes de aprobación, se decidió implementar un sistema de \emph{callbacks} que permite que, una vez se aprueba una solicitud, se ejecute la acción correspondiente, con un payload guardado al momento de crear la solicitud, que contiene toda la información necesaria para ejecutar la acción. Esto permite que, una vez se aprueba una solicitud, se ejecute la acción correspondiente de forma automática, sin tener que esperar a que el usuario haga algo más. Además de esto, desde el \emph{frontend} se maneja de forma especial cuando se recibe un error 403 causado por una solicitud de aprobación pendiente (es decir, cuando el usuario tiene permiso a nivel supervisado), indicandolo correctamente; para esto, se verifica que el código de error acabe en "ApprovalRequired".
+
+\subsection{Resultados obtenidos}
+Al finalizar este \emph{sprint}, la aplicación queda completa en su alcance inicial. Como incremento de anterior, se permite la creación de agentes de \ac{IA} y la interacción con estos, que además pueden interactuar con la aplicación de la misma forma que un usuario. Por otro lado, se implementa un sistema de notificaciones y solicitudes de aprobación, completando la gestión de permisos basado en roles, y permitiendo funcionalidades básicas como aceptar invitaciones a organizaciones y proyectos, o aprobar cambios en elementos de trabajo. En la Figura \ref{fig:notifications} se puede ver un ejemplo de la interfaz de notificaciones, que es la misma para notificaciones y solicitudes de aprobación.
+
+\begin{figure}[htbp]
+    \centering
+
+    \begin{subfigure}{0.48\textwidth}
+        \includegraphics[width=\linewidth]{images/Content/Desarrollo/notification.png}
+        \caption{Notificaciones}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.48\textwidth}
+        \includegraphics[width=\linewidth]{images/Content/Desarrollo/request.png}
+        \caption{Solicitudes de aprobación}
+    \end{subfigure}
+
+    \caption{Vista de notificaciones y solicitudes de aprobación}
+    \label{fig:notifications}
+\end{figure}
