@@ -44,3 +44,31 @@ La evaluación de los atributos de calidad y restricciones globales del sistema 
     \caption{Resultados de la prueba de carga}
     \label{fig:performance}
 \end{figure}
+
+\section{Lecciones aprendidas}
+El desarrollo de este proyecto ha supuesto la puesta en práctica de conceptos teóricos complejos, dejando aprendizajes técnicos y metodológicos:
+
+\begin{itemize}
+    \item \textbf{Pragmatismo frente a pureza arquitectónica:} Aplicar enfoques estrictos como \ac{DDD} a menudo genera fricción con las herramientas del \emph{framework} (como el contenedor de inyección de dependencias o el ORM). Se ha aprendido la importancia de no forzar los patrones y buscar un equilibrio práctico que mantenga un buen diseño sin sobrecomplicar la implementación. Siempre hay que buscar un punto medio entre la pureza teórica y la eficiencia pragmática.
+    
+    \item \textbf{La realidad de la consistencia eventual:} Aislar los módulos y comunicarlos mediante el bus de eventos ha demostrado la complejidad de los sistemas distribuidos. Renunciar a la transaccionalidad inmediata de las bases de datos exige un cambio de mentalidad radical, especialmente a la hora de trazar errores y gestionar flujos asíncronos.
+    
+    \item \textbf{Integración de IA con estado (\emph{Stateful}):} Se ha comprobado que construir agentes autónomos va mucho más allá de hacer simples peticiones a un modelo de lenguaje. El verdadero reto de ingeniería radica en la orquestación: gestionar el estado de los flujos de trabajo, las suspensiones y la recuperación del contexto tras esperar la interacción humana.
+    
+    \item \textbf{Simplificación del estado en el frontend:} El uso de \emph{React Query} ha evidenciado que la mayor parte de los datos que tradicionalmente se manejan en el cliente son, en realidad, caché del servidor. Delegar la sincronización e invalidación de estos datos ha simplificado drásticamente el código de la interfaz de usuario. Aún así, han ido surgiendo \emph{bugs} visuales por problemas de invalidación de caché, por lo que estas herramientas tan potentes requieren ser usadas con cuidado y entendimiento de cada caso de uso.
+    
+    \item \textbf{Metodologías al servicio del proyecto:} Intentar aplicar estándares corporativos como \emph{Git Flow} en un desarrollo individual generó una burocracia innecesaria. Pivotar hacia \emph{Trunk-Based Development} ha enseñado que los procesos deben adaptarse a la realidad del equipo para aportar agilidad. Asimismo, se comprobó que una alta cobertura de pruebas no es un mero trámite académico, sino la única red de seguridad que permite refactorizar código sin miedo a romper el sistema.
+\end{itemize}
+
+\section{Reflexión final y conclusiones personales}
+La realización de este Trabajo de Fin de Grado ha representado el mayor desafío técnico y profesional al que me he enfrentado hasta la fecha. El desarrollo de Leaftask nació como una propuesta ambiciosa: no solo se trataba de construir una aplicación de gestión funcional, sino de hacerlo aplicando estándares de la industria moderna y explorando la integración de \ac{IA} en flujos de trabajo asíncronos.
+
+A lo largo de estos meses, el proyecto ha servido como un puente entre la base teórica adquirida durante los estudios de grado y la realidad del desarrollo de \emph{software} a nivel empresarial. Diseñar e implementar una arquitectura de Monolito Modular ha requerido una extensa labor de investigación autodidacta. Aprender a lidiar con la complejidad accidental, gestionar el acoplamiento y diseñar sistemas orientados a eventos ha supuesto una curva de aprendizaje pronunciada, pero altamente gratificante.
+
+Uno de los mayores logros personales ha sido perder el miedo a la complejidad arquitectónica, y a su vez, no idealizarla. He aprendido que en muchas ocasiones, la mejor solución no es la más elegante, sino la que permite avanzar con el proyecto, un equilibrio entre la teoría y la práctica que solo se alcanza con experiencia.
+
+Asimismo, la integración de los Agentes de \ac{IA} me ha permitido comprender que el verdadero potencial de los \ac{LLM} no reside únicamente en su capacidad de generar texto, sino en su capacidad de razonamiento cuando se les dota de herramientas y contexto dentro del estado de la aplicación.
+
+En retrospectiva, estoy muy satisfecho con el resultado obtenido.La aplicación ha pasado de ser un concepto abstracto a convertirse en un \ac{MVP} robusto, escalable y visualmente pulido. Los obstáculos encontrados, desde la configuración de la infraestructura hasta el análisis, diseño y codificación, han sido lecciones invaluables.
+
+Cierro esta etapa universitaria con la convicción de haber consolidado mis conocimientos como técnico en ingeniería de \emph{software}. Este proyecto no solo certifica el aprendizaje de estos años, sino que me dota de las herramientas, la metodología y la confianza necesarias para afrontar los retos del mercado laboral profesional.
