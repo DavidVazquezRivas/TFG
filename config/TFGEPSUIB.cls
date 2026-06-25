@@ -361,8 +361,10 @@
 			}% Fi de makebox
 		}% Fi de put
 		\put(35,-170){%
-			\makebox(0,0)[lb]{%
+			\makebox(0,0)[lt]{%
+				\parbox{145mm}{%
 					\sffamily{Palabras clave del trabajo: \@paraulesclau}
+				}% Fi de parbox
 			}% Fi de makebox
 		}% Fi de put
 		\put(35,-208){%
