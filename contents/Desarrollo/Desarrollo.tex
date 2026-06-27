@@ -197,7 +197,7 @@ Más allá de los problemas y soluciones de cada iteración, merece la pena come
 \subsection{Monolito Modular y los \emph{Read Models}}
 Descartar los microservicios evitó lidiar con latencias de red y despliegues complejos (bastaba con orquestar un único contenedor), pero mantener el aislamiento estricto de las bases de datos generó fricciones:
 
-\textbf{Beneficios constatados:}
+\textbf{Beneficios:}
 \begin{itemize}
     \item \textbf{Aislamiento funcional seguro:} Se logró una separación estricta de los \emph{Bounded Contexts} utilizando las referencias del proyecto y el compilador como barrera física. Esto permite refactorizar un módulo con la tranquilidad absoluta de que era imposible romper otro módulo por dependencias cruzadas accidentales.
     \item \textbf{Simplicidad de despliegue y latencia nula:} Al compilarse todo el \emph{backend} en un único artefacto (una sola imagen Docker), se evitó la sobrecarga operativa de orquestar múltiples servicios. Además, la comunicación entre módulos se realizó en memoria mediante el bus de eventos, eliminando la latencia de red y los fallos de conexión típicos de los sistemas distribuidos.
