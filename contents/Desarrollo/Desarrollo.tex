@@ -1,15 +1,37 @@
 \chapter{Desarrollo}
 \label{chap:desarrollo}
 
-En este capítulo se expone el proceso de implementación, estructurado cronológicamente a través de los \emph{sprints} de desarrollo definidos en la planificación. Para cada iteración, se detallan los objetivos, los obstáculos e imprevistos encontrados durante la codificación, las adaptaciones arquitectónicas adoptadas para solventarlos y, finalmente, los resultados obtenidos que conforman cada incremento funcional del producto. Se omitirán las decisiones estáticas ya definidas en el capítulo de Diseño, centrándose exclusivamente en la evolución y adaptación del código.
+\section{Metodología y herramientas de desarrollo}
+Antes de detallar la evolución del desarrollo del producto, es fundamental contextualizar el ecosistema tecnológico y las herramientas de apoyo utilizadas. La selección de este conjunto de herramientas ha estado orientada a maximizar la productividad, garantizar la calidad del código y mantener el rigor.
 
-\section{\emph{Sprint 4} - Base del proyecto y autenticación}
+\subsection{Entornos de desarrollo y ecosistema}
+Se utilizaron \ac{IDE} especializados para frontend y backend, cada uno optimizado para su respectivo stack tecnológico:
+
+\begin{itemize}
+    \item \textbf{\emph{Backend} (.NET):} El desarrollo del backend se realizó utilizando \textbf{Visual Studio}. El núcleo tecnológico se apoya en el ecosistema de Microsoft, destacando el uso de \emph{Entity Framework Core} junto a \emph{Npgsql} para la persistencia en PostgreSQL, \emph{MediatR} para la orquestación del patrón \ac{CQRS}, \emph{Quartz} para la ejecución de tareas asíncronas en segundo plano, y \emph{Semantic Kernel} para la integración nativa con los modelos de Inteligencia Artificial.
+    
+    \item \textbf{\emph{Frontend} (React):} La construcción de la \ac{SPA} se llevó a cabo en \textbf{Visual Studio Code}. El proyecto se orquestó mediante \emph{Vite} y \emph{TypeScript}, garantizando un tipado estricto. La gestión del estado se dividió entre \emph{React Query} (estado del servidor) y \emph{Zustand} (estado local). La interfaz visual se apoyó en \emph{Tailwind CSS} y \emph{shadcn/ui}, mientras que la renderización de la vista principal jerárquica utilizó la librería matemática \emph{d3-hierarchy}.
+\end{itemize}
+
+\subsection{Uso de Inteligencia Artificial}
+Dada la magnitud del proyecto para un único desarrollador, se adoptó el uso de asistentes de programación basados en \ac{LLM} como herramientas de productividad integradas en el \ac{IDE}. 
+
+Durante las fases iniciales se empleó \emph{GitHub Copilot}, transitando posteriormente hacia \emph{Claude} (de Anthropic) en modo agente debido a cambios en los planes de suscripción de \emph{GitHub Copilot}. El uso de estas herramientas se rigió por políticas estrictas:
+\begin{itemize}
+    \item \textbf{Automatización de código repetitivo:} La IA se utilizó principalmente para acelerar la escritura de código repetitivo (\emph{boilerplate}) y operaciones \ac{CRUD} sencillas que no presentaban retos técnicos de alto nivel.
+    \item \textbf{Inyección de contexto arquitectónico:} Para evitar sugerencias genéricas o que violaran los principios de diseño, se documentaron exhaustivamente los patrones del proyecto (Arquitectura Limpia, \ac{CQRS}, convenciones de nombrado) en archivos de contexto. De este modo, el agente generaba código que se adhería estrictamente a la arquitectura predefinida.
+\end{itemize}
+
+\section{Cronología de desarrollo}
+En esta sección se presenta el proceso de desarrollo del proyecto estructurado cronológicamente a través de los \emph{sprints} definidos en la planificación. Cada iteración se describe detallando los objetivos, los problemas encontrados, las decisiones y adaptaciones implementadas, así como los resultados obtenidos.
+
+\subsection{\emph{Sprint 4} - Base del proyecto y autenticación}
 Este \emph{sprint} marcó el inicio del desarrollo. Los esfuerzos se centraron en crear la infraestructura base, configurar la conexión a la base de datos y programar el módulo de Identidad, incluyendo el flujo de autenticación mediante OAuth2.
 
-\subsection{Problemas encontrados}
+\subsubsection{Problemas encontrados}
 Durante la inicialización del proyecto, la configuración del contenedor de Inyección de Dependencias de .NET y la implementación del bus de comandos requirió un esfuerzo de investigación superior al estimado. Específicamente, lograr que el sistema de \emph{Pipeline Behaviors} de la biblioteca \texttt{MediatR} interceptara correctamente las peticiones para aplicar validaciones transversales (como el \emph{Logging} y \emph{FluentValidation}) de forma genérica exigió la elaboración de varias abstracciones para asegurar que no se rompiera la tipación estricta del patrón CQRS. A pesar de este incremento en la carga de trabajo, se lograron cumplir los objetivos de la iteración.
 
-\subsection{Decisiones y adaptaciones implementadas}
+\subsubsection{Decisiones y adaptaciones implementadas}
 Durante el paso del diseño teórico a la implementación real, surgieron fricciones que obligaron a adaptar ciertas decisiones arquitectónicas:
 \begin{itemize}
     \item \textbf{Adopción del patrón \emph{Factory} para \emph{Refresh Tokens}:} En la fase de diseño, se estableció que la creación de agregados delegaría exclusivamente en métodos estáticos \texttt{Create} dentro de la propia entidad. Sin embargo, al codificar la generación de \emph{Refresh Tokens}, surgió la necesidad de aplicar políticas de caducidad dinámicas extraídas de la configuración del entorno (\emph{appsettings.json}). Dado que inyectar servicios o configuraciones directamente en una entidad de dominio viola flagrantemente los principios de \ac{DDD}, se decidió abstraer este proceso implementando una clase \texttt{RefreshTokenFactory}. Esta fábrica centraliza la inyección de la interfaz \texttt{IRefreshTokenExpirationPolicy}, resolviendo el acoplamiento y manteniendo la entidad pura.
@@ -27,7 +49,7 @@ Durante el paso del diseño teórico a la implementación real, surgieron fricci
 
 \end{itemize}
 
-\subsection{Resultados obtenidos}
+\subsubsection{Resultados obtenidos}
 Al finalizar el \emph{sprint}, se consolidó una base de código compilable, fuertemente tipada y lista para soportar la lógica de negocio. A nivel funcional, se implementó con éxito un flujo de autenticación, integrando con \emph{Google OAuth}, el \emph{backend} verifica las credenciales, emite correctamente las credenciales JWT y las \emph{cookies} de refresco. Esta iteración cerró la infraestructura transversal, permitiendo que los desarrollos posteriores se enfocaran estrictamente en los procesos de negocio.
 
 Fijandonos en la base del \emph{frontend}, se estableció el proyecto base de React, configurando la estructura de carpetas, soportando internacionalización, modo claro/oscuro y una base de componentes reutilizables. Se implementó un flujo de inicio de sesión completo con \emph{Google OAuth}, incluyendo la gestión de \emph{cookies} de sesión y la redirección a la página principal tras la autenticación exitosa o a la página de inicio de sesión (ver Figura \ref{fig:login-page}) en caso de error. 
@@ -39,18 +61,18 @@ Fijandonos en la base del \emph{frontend}, se estableció el proyecto base de Re
     \label{fig:login-page}
 \end{figure}
 
-\section{\emph{Sprint 5} - Organizaciones}
+\subsection{\emph{Sprint 5} - Organizaciones}
 El objetivo de este \emph{sprint} fue implementar la gestión de organizaciones, incluyendo la creación, edición y eliminación de estas. Así como la definición de roles y permisos, la invitación de usuarios y la asignación de estos a las organizaciones. Además de aplicar la gestión de permisos basada en roles para controlar el acceso a las funcionalidades a nivel de organización.
 
-\subsection{Problemas encontrados}
+\subsubsection{Problemas encontrados}
 La mayoría de la funcionalidad de este \emph{sprint} se implementó sin mayores inconvenientes. Sin embargo, surgieron problemas al intentar implementar la validación de permisos a nivel de organización, principalmente por querer diseñar una solución que fuera flexible y escalable, haciendo que no se valide a mano en cada caso de uso, sino que se pueda aplicar de manera transversal, teniendo en cuenta que un usuario puede tener diferentes roles en diferentes organizaciones. Se consiguió resolver mediante la creación de un \emph{Pipeline Behavior} que intercepta los comandos y valida los permisos. Durante este \emph{sprint} quedó resuelto, pero surgieron problemas más adelante que se comentarán en el \emph{sprint} 6, cuando se implementó la gestión de permisos a nivel de proyecto.
 
-\subsection{Decisiones y adaptaciones implementadas}
+\subsubsection{Decisiones y adaptaciones implementadas}
 No ha habido cambios significativos en la arquitectura durante este \emph{sprint}. Lo que vale la pena destacar es la implementación de un \emph{Pipeline Behavior}, siguiendo el patrón de diseño \emph{Chain of Responsibility}, que permite la validación de permisos de manera transversal a todos los casos de uso. El código de esta validación simplificado se muestra en \ref{lst:permission_validation}.
 
 
 
-\subsection{Resultados obtenidos}
+\subsubsection{Resultados obtenidos}
 Al finalizar el \emph{sprint}, se logró implementar la gestión completa de organizaciones, incluyendo datos básicos, roles y permisos, invitaciones y asignación de usuarios (ver la Figura \ref{fig:organization-results}).
 
 \begin{figure}[htbp]
@@ -77,19 +99,18 @@ Al finalizar el \emph{sprint}, se logró implementar la gestión completa de org
     \label{fig:organization-results}
 \end{figure}
 
-
-\section{\emph{Sprint 6} - Proyectos}
+\subsection{\emph{Sprint 6} - Proyectos}
 El objetivo de este \emph{sprint} fue implementar la gestión de proyectos, muy similar en prácticamente todos los aspectos a la gestión de organizaciones, incluyendo la creación, edición y eliminación de proyectos, así como la definición de roles y permisos, la invitación de usuarios y la asignación de roles a estos. Además de esto, se añade la creación de campos de datos personalizados para cada proyecto, lo que permite cosas como que en cierto proyecto los elementos de trabajo tengan un campo de fecha de entrega, mientras que en otro proyecto no exista tal campo, además de poder discernir entre campos obligatorios y opcionales y que apliquen a diferentes tipos de elementos de trabajo.
 
-\subsection{Problemas encontrados}
+\subsubsection{Problemas encontrados}
 Al ser este \emph{sprint} muy similar al anterior, la mayoría de la funcionalidad se implementó sin inconvenientes, de una forma rápida además. Sin embargo, surgieron problemas al intentar implementar la validación de permisos a nivel de proyecto, debido a unas dependencias entre módulos que no se habían previsto, y que no se pueden resolver de forma asíncrona por comunicaciones con un bus. El problema es por ejemplo, si un usuario quiere eliminar un proyecto de una organización, eso se gestiona desde el módulo de proyectos, pero para validar si el usuario tiene permisos para eliminar un proyecto, se necesita acceder a la información de la organización a la que pertenece el proyecto, y eso se gestiona desde el módulo de organizaciones.
 
-\subsection{Decisiones y adaptaciones implementadas}
+\subsubsection{Decisiones y adaptaciones implementadas}
 Para resolver el problema descrito anteriormente, se decidió crear una interfaz del \emph{Pipeline Behavior} de validación de permisos (tanto para los de organizaciones como los de proyectos) que se pueda inyectar en el otro módulo y se implemente en el módulo correspondiente. De esta forma, el módulo de proyectos puede inyectar la interfaz del \emph{Pipeline Behavior} de validación de permisos de organizaciones y usarlo para validar los permisos de un usuario en una organización, y viceversa. Esto permite que cada módulo sea responsable de la validación de sus propios permisos, y que los módulos puedan comunicarse entre sí sin acoplarse directamente.
 
 Esto resuelve el problema para el sistema actual, como un monolito modular, pero en el momento que se quiera separar en microservicios, no se podrá hacer esta inyección de dependencias entre módulos, y se tendrá que implementar la interfaz de validación de permisos de organizaciones en el módulo de proyectos, como en otros módulos que necesiten esta validación. Esto no será un problema siguiendo el patrón \ac{CQRS} que ya se ha implementado, unicamente se deberán de copiar más datos en los módulos que necesiten validar permisos de otros módulos.
 
-\subsection{Resultados obtenidos}
+\subsubsection{Resultados obtenidos}
 Como resultado de este \emph{sprint}, se logró implementar la gestión completa de proyectos, incluyendo datos básicos, roles y permisos, invitaciones y campos personalizados. Además, se implementó la validación de permisos a nivel de proyecto, utilizando el \emph{Pipeline Behavior} y la interfaz de validación de permisos de organizaciones para validar los permisos de un usuario en una organización. En la Figura \ref{fig:project-fields} se puede ver la interfaz de creación de campos personalizados, el resto de la configuración de proyectos es muy similar a la de organizaciones, por lo que no se muestra en esta memoria.
 
 \begin{figure}[htbp]
@@ -99,17 +120,16 @@ Como resultado de este \emph{sprint}, se logró implementar la gestión completa
     \label{fig:project-fields}
 \end{figure}
 
-
-\section{\emph{Sprint 7} - Elementos de trabajo}
+\subsection{\emph{Sprint 7} - Elementos de trabajo}
 El objetivo de este \emph{sprint} fue implementar la gestión de elementos de trabajo, incluyendo la creación, edición y eliminación de estos, así como registrar el historial de cambios, el trabajo realizado y los comentarios. Además de esto, un reto importante de esta iteración es a nivel de interfaz de usuario, la creación del árbol de elementos de trabajo, que permita visualizar todo el proyecto de forma jerárquica.
 
-\subsection{Problemas encontrados}
+\subsubsection{Problemas encontrados}
 Durante este \emph{sprint} no hubo grandes problemas, temas que no se hubieran previsto y que causaran cambios significativos en la arquitectura. La funcionalidad se implementó sin problemas, teniendo en cuenta que este módulo es el más complejo en cuanto a cantidad de funcionalidades y relaciones entre entidades, pero pocos problemas a nivel técnico.
 
-\subsection{Decisiones y adaptaciones implementadas}
+\subsubsection{Decisiones y adaptaciones implementadas}
 Cómo se ha comentado, no hubo grandes cambios ni adaptaciones durante el desarrollo de este \emph{sprint}. Lo único que se puede destacar es la implementación del árbol de elementos de trabajo, que se implementó como un componente reutilizable en el \emph{frontend}, con un mapper que transforma los elementos de trabajo en un formato que pueda ser consumido por el componente. Para esto, se utilizó la librería de \texttt{d3-hierarchy} para generar la estructura jerárquica de los elementos de trabajo, que facilita evitando la necesidad de implementar algoritmos complejos para generar el árbol. Añadiendo además la posibilidad de expandir y contraer nodos, y de que estos tengan diferentes características visuales dependiendo de su estado, estimación, tipo, etc.
 
-\subsection{Resultados obtenidos}
+\subsubsection{Resultados obtenidos}
 Cómo resultado de este \emph{sprint}, se logró implementar la funcionalidad base de la aplicación, permitiendo ya la gestión completa de elementos de trabajo, y teniendo una vista jerárquica de todo el proyecto, que permite ver de un vistazo la estructura del proyecto, uno de los objetivos principales del proyecto. En la Figura \ref{fig:work-items-tree} se puede ver un ejemplo de esta vista.
 
 \begin{figure}[htbp]
@@ -119,18 +139,18 @@ Cómo resultado de este \emph{sprint}, se logró implementar la funcionalidad ba
     \label{fig:work-items-tree}
 \end{figure}
 
-\section{\emph{Sprint 8} - Chat y inicio de agentes}
+\subsection{\emph{Sprint 8} - Chat y inicio de agentes}
 El objetivo principal de este \emph{sprint} fue implementar la funcionalidad de chat, que permite a los usuarios comunicarse entre ellos de forma asíncrona, la interfaz manteniendose reutilizable para hablar con personas o con agentes. Además de esto, se empezó a desarrollar el módulo de agentes, ya que es un módulo muy complejo y se decidió empezar a desarrollarlo en esta iteración, aunque no se completó.
 
-\subsection{Problemas encontrados}
+\subsubsection{Problemas encontrados}
 En lo relativo a la funcionalidad de chat, no hubo problemas, más allá de que para el chat en tiempo real se prescindió de usar \emph{WebSockets} o \emph{SignalR}, y se optó por una solución más sencilla, que consiste en hacer peticiones periódicas al servidor para obtener los mensajes nuevos. Esto se hizo así para simplificar la arquitectura y no tener que implementar un sistema de mensajería en tiempo real, que no era un objetivo principal del proyecto. 
 Por otro lado, en lo relativo al módulo de agentes, no se había planteado la complejidad que suponía el comportamiento agéntico, permitiendo que los agentes pausen su trabajo, esperen respuestas de los usuarios, y reanuden su trabajo, además de mantener un contexto completo de la conversación.
 
-\subsection{Decisiones y adaptaciones implementadas}
+\subsubsection{Decisiones y adaptaciones implementadas}
 Como se ha adelantado, para el sistema de mensajería en tiempo real, se ha optado por que el cliente vaya haciendo un \emph{pooling} de mensajes para obtener los nuevos, en lugar de utilizar alguna tecnología que permita la comunicación desde el servidor al cliente.
 Por otro lado, en la implementación del módulo de agentes, se decidió añadir un estado de 'suspendido' a los agentes, que permite que estos puedan pausar su trabajo en función de que se produzca un cierto evento de dominio, como por ejemplo que el usuario responda a un mensaje del agente. Esto permite que los agentes puedan esperar a que el usuario responda, y reanudar su trabajo cuando esto ocurra, manteniendo un contexto completo de la conversación. Estas tablas se ven reflejadas en el capítulo de Diseño, tanto en la base de datos, como en el diagrama de secuencia.
 
-\subsection{Resultados obtenidos}
+\subsubsection{Resultados obtenidos}
 A nivel funcional, el único resultado de este \emph{sprint} fue la implementación del sistema de chat. El módulo de agentes no se completó, pero se sentaron las bases para su desarrollo en el siguiente \emph{sprint}. En la Figura \ref{fig:chat} se puede ver un ejemplo de la interfaz de chat, en este caso con un agente, pero la interfaz es la misma para hablar con otros usuarios.
 
 \begin{figure}[htbp]
@@ -140,19 +160,18 @@ A nivel funcional, el único resultado de este \emph{sprint} fue la implementaci
     \label{fig:chat}
 \end{figure}
 
-
-\section{\emph{Sprint 9} - Agentes y notificaciones}
+\subsection{\emph{Sprint 9} - Agentes y notificaciones}
 En este \emph{sprint} se completa el desarrollo de la aplicación. Implementando los dos módulos restantes, el de agentes y el de notificaciones. Sobre el módulo de agentes, gran parte del trabajo ya se había hecho en el \emph{sprint} anterior, por lo que en esta iteración se completó, y se implementó la funcionalidad de notificaciones junto con las solicitudes de aprobación de diferentes acciones.
 
-\subsection{Problemas encontrados}
+\subsubsection{Problemas encontrados}
 En esta iteración han ocurrido diferentes problemas. Empezando por lo relativo a los agentes, con la base ya implementada, se expusieron todas las \emph{tools} para que estos pudieran interactuar con la aplicación de la misma forma que un usuario, aquí hubo problemas ya que los \emph{Behaviours} de comprobación de permisos y autenticación no estaban preparados para que un agente pudiera interactuar con la aplicación, sino unicamente un usuario con un access token válido. Esto hizo que se tuvieran que modificar esos \emph{Behaviours} desarrollados anteriormente.
 Por otro lado, con las notificaciones, surgieron problemas relacionados con las solicitudes de aprobación, ya que no se había diseñado correctamente para permitir que, una vez se aprueba una solicitud, esa acción se ejecute de forma automática. Si que era un requisito analizado, pero no se había diseñado para ello.
 
-\subsection{Decisiones y adaptaciones implementadas}
+\subsubsection{Decisiones y adaptaciones implementadas}
 Para solventar los problemas de los agentes, se decidió modificar los \emph{Behaviours}, haciendolos funcionar con el polimorfismo que se planteó en el diseño, pero no estaba aún aplicado en el código. Esto permitió que los agentes pudieran interactuar con la aplicación de la misma forma que un usuario, sin tener que modificar la lógica de negocio.
 En cuanto a las solicitudes de aprobación, se decidió implementar un sistema de \emph{callbacks} que permite que, una vez se aprueba una solicitud, se ejecute la acción correspondiente, con un payload guardado al momento de crear la solicitud, que contiene toda la información necesaria para ejecutar la acción. Esto permite que, una vez se aprueba una solicitud, se ejecute la acción correspondiente de forma automática, sin tener que esperar a que el usuario haga algo más. Además de esto, desde el \emph{frontend} se maneja de forma especial cuando se recibe un error 403 causado por una solicitud de aprobación pendiente (es decir, cuando el usuario tiene permiso a nivel supervisado), indicandolo correctamente; para esto, se verifica que el código de error acabe en 'ApprovalRequired'.
 
-\subsection{Resultados obtenidos}
+\subsubsection{Resultados obtenidos}
 Al finalizar este \emph{sprint}, la aplicación queda completa en su alcance inicial. Como incremento de anterior, se permite la creación de agentes de \ac{IA} y la interacción con estos, que además pueden interactuar con la aplicación de la misma forma que un usuario. Por otro lado, se implementa un sistema de notificaciones y solicitudes de aprobación, completando la gestión de permisos basado en roles, y permitiendo funcionalidades básicas como aceptar invitaciones a organizaciones y proyectos, o aprobar cambios en elementos de trabajo. En la Figura \ref{fig:notifications} se puede ver un ejemplo de la interfaz de notificaciones, que es la misma para notificaciones y solicitudes de aprobación.
 
 \begin{figure}[htbp]
@@ -171,3 +190,34 @@ Al finalizar este \emph{sprint}, la aplicación queda completa en su alcance ini
     \caption{Vista de notificaciones y solicitudes de aprobación}
     \label{fig:notifications}
 \end{figure}
+
+\section{Consideraciones generales}
+Más allá de los problemas y soluciones de cada iteración, merece la pena comentar el impacto general que han tenido las decisiones arquitectónicas adoptadas. Desarrollar un Monolito Modular guiado por \ac{DDD} en solitario ha supuesto enfrentarse a problemas que alejaron el desarrollo de la teoría ideal.
+
+\subsection{Monolito Modular y los \emph{Read Models}}
+Descartar los microservicios evitó lidiar con latencias de red y despliegues complejos (bastaba con orquestar un único contenedor), pero mantener el aislamiento estricto de las bases de datos generó fricciones:
+
+\textbf{Beneficios constatados:}
+\begin{itemize}
+    \item \textbf{Aislamiento funcional seguro:} Se logró una separación estricta de los \emph{Bounded Contexts} utilizando las referencias del proyecto y el compilador como barrera física. Esto permite refactorizar un módulo con la tranquilidad absoluta de que era imposible romper otro módulo por dependencias cruzadas accidentales.
+    \item \textbf{Simplicidad de despliegue y latencia nula:} Al compilarse todo el \emph{backend} en un único artefacto (una sola imagen Docker), se evitó la sobrecarga operativa de orquestar múltiples servicios. Además, la comunicación entre módulos se realizó en memoria mediante el bus de eventos, eliminando la latencia de red y los fallos de conexión típicos de los sistemas distribuidos.
+\end{itemize}
+
+\textbf{Fricciones generadas:}
+\begin{itemize}
+    \item \textbf{Duplicación masiva de datos por evitar \emph{JOINs}:} En la práctica, no poder cruzar tablas entre módulos supuso un incremento notable de \emph{boilerplate}. Como se definió en el modelo de datos, fue necesario crear tablas como \texttt{user\_readmodels} en los módulos de Organizaciones, Proyectos, Elementos de Trabajo y Chats. Esto implicaba que una operación trivial, como actualizar el nombre de un usuario, obligaba a disparar eventos de integración para sincronizar ese cambio de forma duplicada en cuatro bases de datos distintas.
+    \item \textbf{Problemas en las autorizaciones cruzadas:} Mantener los módulos desacoplados dificultó validaciones que funcionalmente están muy unidas. El ejemplo más claro es el comentado en el \emph{Sprint 6}: validar si un usuario podía modificar un Proyecto requería conocer su rol en la Organización matriz.
+\end{itemize}
+
+\subsection{Problemas de la Consistencia Eventual}
+Implementar una comunicación basada enteramente en eventos (\emph{Outbox/Inbox}) transformó la manera de depurar la aplicación en el día a día.
+
+\begin{itemize}
+    \item \textbf{Depuración "a ciegas" (\emph{Debugging}):} En un modelo tradicional síncrono, si al crear un Elemento de Trabajo fallaba la creación de su notificación, la petición HTTP devuelve un error 500. Con el patrón \emph{Outbox}, la petición del usuario devolvía un 200 OK de inmediato, pero el error silencioso estallaba segundos después en un \emph{Background Worker} de \emph{Quartz}. Perder el contexto temporal de la petición obligó a depender casi en exclusiva de la traza de los \emph{logs} estructurados con identificadores de correlación (\emph{Correlation IDs}) para averiguar qué evento había fallado en la bandeja de entrada de un módulo destino.
+    \item \textbf{Compensación visual en el \emph{Frontend}:} La asincronía del servidor forzó a trasladar complejidad al cliente de React. Dado que la creación de dependencias o asignaciones en el Árbol de Trabajo podía tardar milisegundos en propagarse por los \emph{read models}, hubo que programar actualizaciones optimistas (\emph{optimistic updates}) mediante \emph{React Query}. Esto permitió pintar el nodo en el grafo instantáneamente, engañando visualmente a la latencia real de sincronización del \emph{backend}.
+\end{itemize}
+
+\subsection{El retorno de inversión de la complejidad inicial}
+Durante los primeros \emph{sprints} (del 4 al 6), la cantidad de \emph{boilerplate} requerida por \emph{Clean Architecture} y \ac{CQRS} (crear comandos, manejadores, validadores e interfaces para una simple operación de \ac{CRUD}) generó una velocidad de desarrollo aparentemente lenta y repetitiva.
+
+Sin embargo, el retorno de esta alta inversión inicial se materializó de forma evidente en el \emph{Sprint} 9. Gracias a que cada acción del sistema emitía un evento de dominio estándar y el código estaba estrictamente encapsulado, integrar el motor de Agentes de \ac{IA} fue sorprendentemente ágil. Los agentes pudieron suscribirse a la creación de tareas o comentarios, y ejecutar herramientas reutilizando los mismos comandos (Commands) que la interfaz \ac{UI}, sin requerir la reescritura de una sola línea de código de la lógica de negocio subyacente.
