@@ -13,60 +13,17 @@ Durante la inicialización del proyecto, la configuración del contenedor de Iny
 Durante el paso del diseño teórico a la implementación real, surgieron fricciones que obligaron a adaptar ciertas decisiones arquitectónicas:
 \begin{itemize}
     \item \textbf{Adopción del patrón \emph{Factory} para \emph{Refresh Tokens}:} En la fase de diseño, se estableció que la creación de agregados delegaría exclusivamente en métodos estáticos \texttt{Create} dentro de la propia entidad. Sin embargo, al codificar la generación de \emph{Refresh Tokens}, surgió la necesidad de aplicar políticas de caducidad dinámicas extraídas de la configuración del entorno (\emph{appsettings.json}). Dado que inyectar servicios o configuraciones directamente en una entidad de dominio viola flagrantemente los principios de \ac{DDD}, se decidió abstraer este proceso implementando una clase \texttt{RefreshTokenFactory}. Esta fábrica centraliza la inyección de la interfaz \texttt{IRefreshTokenExpirationPolicy}, resolviendo el acoplamiento y manteniendo la entidad pura.
+    El código del \emph{factory} se muestra en el Listado \ref{lst:factory_token}.
     
-    \begin{lstlisting}[style=CSharp, caption={Implementación del patrón Factory delegando logicas de expiracion.}, label={lst:factory_token}]
-public class RefreshTokenFactory(IRefreshTokenExpirationPolicy policy) : IRefreshTokenFactory
-{
-    public RefreshToken CreateForUser(Guid userId)
-    {
-        // La fabrica obtiene la politica de expiracion inyectada dinamicamente
-        TimeSpan duration = policy.ExpirationDuration;
-        return RefreshToken.Create(userId, duration);
-    }
-}
-    \end{lstlisting}
+    
     
     \item \textbf{Intercepción del ciclo de vida en \emph{Entity Framework}:} Al implementar el patrón \emph{Outbox} diseñado, el reto radicaba en asegurar que la escritura de los eventos de dominio en base de datos ocurriera en la misma transacción atómica que las mutaciones de negocio. En lugar de forzar a la capa de Aplicación a abrir y cerrar transacciones manualmente, se tomó la decisión de intervenir el motor de persistencia sobrescribiendo el método \texttt{SaveChangesAsync} del \texttt{DbContext}. Con esta adaptación, el sistema rastrea automáticamente las entidades modificadas justo antes del \emph{commit}, extrae sus eventos internos y los serializa en la tabla del \emph{Outbox} de forma totalmente transparente para los casos de uso.
-    \begin{lstlisting}[style=CSharp, caption={Sobrescritura de SaveChangesAsync para persistir eventos de dominio.}, label={lst:savechanges}]
-public override async Task<int> SaveChangesAsync()
-{
-    List<IDomainEvent> domainEvents = GetDomainEvents();
-
-    await domainEventsDispatcher.DispatchAsync(domainEvents, cancellationToken);
-
-    InsertOutboxMessages(domainEvents);
-
-    return await base.SaveChangesAsync(cancellationToken);
-}
-    \end{lstlisting}
+    
+    El código de la sobrescritura de \texttt{SaveChangesAsync} se muestra en el Listado \ref{lst:savechanges}.
 
     \item \textbf{Patrón Specification para consultas complejas:} Durante la implementación de la capa de Infraestructura, se identificó que ciertas consultas a la base de datos requerían criterios de filtrado dinámicos y combinables, así como la inclusión condicional de relaciones. Para evitar la creación de múltiples métodos de repositorio con firmas similares (GetById, GetByEmail, GetByNameWithRelations, etc.), se adoptó el patrón \emph{Specification}. Este patrón permite encapsular la lógica de filtrado en objetos reutilizables, facilitando la composición de criterios.
     
-    \begin{lstlisting}[style=CSharp, caption={Implementación del patrón Specification para la capa de persistencia de datos.}, label={lst:specification_pattern}]
-public abstract class BaseSpecification<T>(Expression<Func<T, bool>> criteria) 
-    : ISpecification<T>
-{
-    private readonly List<Expression<Func<T, object>>> _includes = [];
-    public Expression<Func<T, bool>> Criteria { get; } = criteria;
-    public IReadOnlyCollection<Expression<Func<T, object>>> Includes 
-        => _includes.AsReadOnly();
-        
-    protected void AddInclude(Expression<Func<T, object>> expr) 
-        => _includes.Add(expr);
-}
-
-// Especificacion concreta que encapsula la logica de filtrado e inclusion
-public sealed class UserWithActiveRefreshTokensSpecification 
-    : BaseSpecification<User>
-{
-    public UserWithActiveRefreshTokensSpecification(Guid userId)
-        : base(user => user.Id == userId)
-    {
-        AddInclude(user => user.RefreshTokens
-            .Where(rt => rt.RevokedAt == null && rt.ExpiresAt > DateTime.UtcNow));
-    }
-}
-    \end{lstlisting}
+    El código de ejemplo de una especificación concreta se muestra en el Listado \ref{lst:specification_pattern}.
 
 \end{itemize}
 
@@ -91,31 +48,7 @@ La mayoría de la funcionalidad de este \emph{sprint} se implementó sin mayores
 \subsection{Decisiones y adaptaciones implementadas}
 No ha habido cambios significativos en la arquitectura durante este \emph{sprint}. Lo que vale la pena destacar es la implementación de un \emph{Pipeline Behavior}, siguiendo el patrón de diseño \emph{Chain of Responsibility}, que permite la validación de permisos de manera transversal a todos los casos de uso. El código de esta validación simplificado se muestra en \ref{lst:permission_validation}.
 
-\begin{lstlisting}[style=CSharp, caption={Validación en cascada mediante Chain of Responsibility.}, label={lst:permission_validation}]
-public sealed class OrganizationPermissionBehavior<TRequest, TResponse>(...) 
-    : IPipelineBehavior<TRequest, TResponse>
-{
-    public async Task<TResponse> Handle(TRequest request, 
-        RequestHandlerDelegate<TResponse> next, CancellationToken ct)
-    {
-        // [...] Extraccion de la configuracion de permisos requeridos
-        
-        Organization? org = await organizationRepository
-            .GetByIdAsync(permissionRequest.OrganizationId, ct);
-        if (org is null) return CreateFailureResponse(OrganizationNotFound); // Corta la cadena
 
-        OrganizationInvitation? invitation = org.Invitations
-            .FirstOrDefault(inv => inv.UserId == userContext.UserId);
-        if (invitation is null) return CreateFailureResponse(OrganizationMembershipRequired);
-
-        // [...] Evaluacion del nivel del rol
-        if (rolePermission?.Level == PermissionLevel.Full) 
-            return await next(ct); // Autorizado: pasa el control al siguiente eslabon
-            
-        return CreateFailureResponse(OrganizationPermissionDenied);
-    }
-}
-\end{lstlisting}
 
 \subsection{Resultados obtenidos}
 Al finalizar el \emph{sprint}, se logró implementar la gestión completa de organizaciones, incluyendo datos básicos, roles y permisos, invitaciones y asignación de usuarios (ver la Figura \ref{fig:organization-results}).

@@ -1,4 +1,373 @@
 \chapter{Anexos}
 \label{chap:anexos}
 
-Texto placeholder de anexos. Aquí se añadirá material complementario cuando la memoria esté más avanzada.
+\section{Fragmentos de código}
+
+\begin{lstlisting}[float=htbp, style=CSharp, caption={Implementación del patrón Static Factory Method en la entidad User.}, label={lst:factory_user}]
+public sealed class User : Entity
+{
+    // Constructor privado: impide la instanciacion directa y anula estados invalidos
+    private User(Guid id, string firstName, string lastName, string email) { ... }
+
+    // Factory Method estatico: Valida invariantes y emite el evento de dominio
+    public static User Create(string firstName, string lastName, string email)
+    {
+        User user = new(Guid.NewGuid(), firstName, lastName, email);
+        user.Raise(new UserCreatedDomainEvent(
+            user.Id, user.FirstName, user.LastName, user.Email));
+
+        return user;
+    }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[float=htbp, style=CSharp, caption={Implementación del patrón Decorator mediante Pipeline Behaviors para trazabilidad y validación.}, label={lst:decorator_mediatr}]
+// Logging: mide y traza todas las peticiones
+public sealed class LoggingBehavior<TRequest, TResponse>(ILogger<...> logger)
+    : IPipelineBehavior<TRequest, TResponse>
+{
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
+    {
+        logger.LogInformation("[{Behavior}] Executing: {Name}", 
+            nameof(LoggingBehavior<,>), typeof(TRequest).Name);
+            
+        Stopwatch timer = Stopwatch.StartNew();
+        TResponse response = await next(ct);
+        
+        logger.LogInformation("[{Behavior}] Completed in {Ms}ms", 
+            nameof(LoggingBehavior<,>), timer.ElapsedMilliseconds);
+        return response;
+    }
+}
+
+// Validacion: ejecuta todos los IValidator<TRequest> registrados
+public sealed class ValidationBehavior<TRequest, TResponse>(
+    IEnumerable<IValidator<TRequest>> validators)
+    : IPipelineBehavior<TRequest, TResponse>
+{
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
+    {
+        if (!validators.Any()) return await next(ct);
+        
+        ValidationResult[] results = await Task.WhenAll(
+            validators.Select(v => v.ValidateAsync(new(request), ct)));
+            
+        List<ValidationFailure> errors = results
+            .Where(r => !r.IsValid)
+            .SelectMany(r => r.Errors).ToList();
+            
+        if (errors.Count > 0) throw new ValidationException(errors);
+        return await next(ct);
+    }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[float=htbp, style=TypeScript, caption={Implementación del patrón Proxy mediante interceptores HTTP para inyección y rotación de tokens.}, label={lst:proxy_interceptors}]
+// Request: inyecta el token de acceso en cada peticion
+apiClient.interceptors.request.use((config) => {
+  const requestConfig = config as RetriableRequestConfig;
+  if (!requestConfig.skipAuthorization) {
+    const accessToken = getAccessToken();
+    if (accessToken) {
+        requestConfig.headers.set('Authorization', `Bearer ${accessToken}`);
+    }
+  }
+  return requestConfig;
+});
+
+// Response: detecta 401, refresca y reintenta (una sola vez)
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const requestConfig = error.config as RetriableRequestConfig | undefined;
+    if (!requestConfig || requestConfig._retry || error.response?.status !== 401) {
+        return Promise.reject(error);
+    }
+    
+    requestConfig._retry = true;
+    // Promesa compartida para sincronizar multiples peticiones fallidas
+    const refreshedToken = await getRefreshTokenOnce();  
+    requestConfig.headers.set('Authorization', `Bearer ${refreshedToken}`);
+    
+    return apiClient(requestConfig);
+  }
+);
+\end{lstlisting}
+
+\begin{lstlisting}[float=htbp, style=TypeScript, caption={Implementación del patrón Facade para agrupar los servicios de llamadas HTTP.}, label={lst:facade_apigateway}]
+export const ApiGateway = {
+  organization: {
+    invitations: OrganizationInvitationsGateway,
+    management:  OrganizationManagementGateway,
+    members:     OrganizationMembersGateway,
+    roles:       OrganizationRolesGateway,
+  },
+  project: {
+    customFields: ProjectCustomFieldsGateway,
+    management:   ProjectManagementGateway,
+  },
+  workItem: {
+    management:  WorkItemsGateway,
+    workLogs:    WorkLogGateway,
+    attachments: AttachmentGateway,
+    comments:    CommentGateway,
+  },
+  user:  { session: SessionGateway, users: UsersGateway },
+  agent: AgentGateway,
+  chat:  ChatGateway,
+} as const;
+
+// Uso simplificado desde cualquier componente:
+// ApiGateway.workItem.management.createWorkItem(projectId, payload)
+\end{lstlisting}
+
+\begin{lstlisting}[float=htbp, style=CSharp, caption={Definición de interfaces base para CQRS y su aplicación práctica.}, label={lst:cqrs_pattern}]
+public interface ICommand : IRequest;
+public interface ICommand<out TResponse> : IRequest<TResponse>;
+public interface IQuery<out TResponse> : IRequest<TResponse>;
+
+// Command: modifica el estado del dominio
+public sealed record CreateOrganizationCommand(
+    string Name, string Description, string Website)
+    : ICommand<Result<OrganizationDto>>;
+
+// Query: operacion de solo lectura
+public sealed record GetMyOrganizationsQuery(
+    int Limit, string? Cursor, IReadOnlyCollection<string> Sort)
+    : IQuery<Result<PaginatedResult<SimpleOrganizationDto>>>;
+\end{lstlisting}
+
+\begin{lstlisting}[float=htbp, style=CSharp, caption={Uso del patrón Mediator para desacoplar controladores de sus manejadores.}, label={lst:mediator_pattern}]
+// Controller base que inyecta el ISender del Mediator
+public abstract class ApiBaseController : ControllerBase
+{
+    private ISender? _sender;
+    protected ISender Sender => _sender ??= 
+        HttpContext.RequestServices.GetRequiredService<ISender>();
+}
+
+// Controller concreto enviando un Command
+[HttpPost]
+public async Task<IActionResult> Create(
+    [FromBody] CreateOrganizationRequest request, CancellationToken ct)
+{
+    var command = new CreateOrganizationCommand(
+        request.Name, request.Description, request.Website);
+    return HandleResult(await Sender.Send(command, ct));
+}
+\end{lstlisting}
+
+\begin{lstlisting}[float=htbp, style=CSharp, caption={Separación de contrato e implementación mediante el patrón Repository.}, label={lst:repository_pattern}]
+// Dominio: contrato agnostico a la infraestructura
+public interface IOrganizationRepository
+{
+    Task<Organization?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task AddAsync(Organization org, CancellationToken ct = default);
+    Task SaveChangesAsync(CancellationToken ct = default);
+}
+
+// Infraestructura: implementacion concreta acoplada a EF Core
+public class OrganizationRepository(OrganizationDbContext dbContext) 
+    : IOrganizationRepository
+{
+    public async Task<Organization?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
+        await dbContext.Organizations
+            .AsSplitQuery()
+            .Include(o => o.Invitations)
+            .Include(o => o.Roles).ThenInclude(r => r.Permissions)
+            .FirstOrDefaultAsync(o => o.Id == id, ct);
+
+    public async Task SaveChangesAsync(CancellationToken ct = default) =>
+        await dbContext.SaveChangesAsync(ct);
+}
+\end{lstlisting}
+
+\begin{lstlisting}[float=htbp, style=CSharp, caption={Implementación del patrón Observer para Eventos de Dominio.}, label={lst:observer_domain}]
+public abstract class Entity
+{
+    private readonly List<IDomainEvent> _domainEvents = [];
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+    public void Raise(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
+}
+
+// Intercepcion del DbContext para despachar observadores
+public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
+{
+    List<IDomainEvent> domainEvents = ChangeTracker.Entries<Entity>()
+        .SelectMany(e => e.Entity.DomainEvents).ToList();
+
+    await domainEventsDispatcher.DispatchAsync(domainEvents, ct);
+    InsertOutboxMessages(domainEvents);
+    
+    return await base.SaveChangesAsync(ct);
+}
+\end{lstlisting}
+
+\begin{lstlisting}[float=htbp, style=CSharp, caption={Consumo asíncrono e idempotente de Eventos de Integración (Inbox).}, label={lst:observer_integration}]
+public abstract class IntegrationEventHandler<TIntegrationEvent, TContext>(...) 
+    : INotificationHandler<TIntegrationEvent>
+{
+    public async Task Handle(TIntegrationEvent notification, CancellationToken ct)
+    {
+        Guid messageId = integrationEventContextAccessor.CurrentMessageId 
+            ?? GetFallbackMessageId(notification);
+
+        // Verificacion de idempotencia: actua como un observer seguro
+        bool alreadyProcessed = await dbContext.Set<InboxMessage>()
+            .AsNoTracking().AnyAsync(m => m.Id == messageId, ct);
+            
+        if (alreadyProcessed) return;
+
+        await HandleIntegrationEvent(notification, ct);
+
+        dbContext.Set<InboxMessage>().Add(InboxMessage.Create(messageId, ...));
+        await dbContext.SaveChangesAsync(ct);
+    }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[float=htbp, style=TypeScript, caption={Suscripción reactiva al estado del servidor mediante React Query.}, label={lst:observer_frontend}]
+// Estructura jerarquica de claves para invalidacion granular
+export const QueryKeys = {
+  workItem: {
+    management: {
+      all: ['workitem', 'management'] as const,
+      list: (projectId: string) => ['workitem', 'management', 'list', projectId] as const,
+    },
+  },
+} as const;
+
+// Hook observador del estado
+export const useProjectWorkItemsQuery = (projectId: string | null) => {
+  const accessToken = useAuthStore((state) => state.accessToken);
+  return useQuery({
+    queryKey: QueryKeys.workItem.management.list(projectId ?? ''),
+    queryFn: async () => { /* Logica de paginacion y llamada a la API */ },
+    enabled: Boolean(accessToken && projectId),
+  });
+};
+\end{lstlisting}
+
+\begin{lstlisting}[float=htbp, style=TypeScript, caption={El patrón Command encapsulando operaciones de escritura en React Query.}, label={lst:command_frontend}]
+export const useCreateWorkItemMutation = (projectId: string) => {
+  const handleApiError = useApiErrorHandler();
+
+  return useMutation({
+    mutationKey: [...QueryKeys.workItem.management.all, 'create', projectId],
+    mutationFn: (payload: CreateWorkItemRequest) =>
+      ApiGateway.workItem.management.createWorkItem(projectId, payload),
+    onSuccess: async () => {
+      // Efectos secundarios unificados dentro del Command
+      await queryClient.invalidateQueries({ 
+        queryKey: QueryKeys.workItem.management.list(projectId) 
+      });
+      toast.success(i18n.t('create.feedback.created', { ns: 'workitems' }));
+    },
+    onError: (error) => handleApiError(error),
+  });
+};
+\end{lstlisting}
+
+\begin{lstlisting}[float=htbp, style=CSharp, caption={Implementación de Strategy para la inyección de datos iniciales.}, label={lst:strategy_pattern}]
+public interface IUserSeederStrategy
+{
+    Task SeedAsync(UserDbContext dbContext, CancellationToken ct = default);
+}
+
+public sealed class DevelopmentUserSeeder : IUserSeederStrategy
+{
+    public async Task SeedAsync(UserDbContext dbContext, CancellationToken ct = default)
+    {
+        if (await dbContext.Users.AnyAsync(ct)) return;
+        User[] users = [
+            User.Create("Admin", "Developer", "admin@dev.com"),
+            User.Create("John",  "Doe",       "john@dev.com"),
+        ];
+        await dbContext.Users.AddRangeAsync(users, ct);
+        await dbContext.SaveChangesAsync(ct);
+    }
+}
+
+// Inyeccion de dependencias resolviendo la estrategia en el arranque
+services.AddScoped<IUserSeederStrategy>(
+    isDevelopment 
+        ? _ => new DevelopmentUserSeeder() 
+        : _ => new ProductionUserSeeder());
+\end{lstlisting}
+
+\begin{lstlisting}[float=htbp, style=CSharp, caption={Implementación del patrón Factory delegando logicas de expiracion.}, label={lst:factory_token}]
+public class RefreshTokenFactory(IRefreshTokenExpirationPolicy policy) : IRefreshTokenFactory
+{
+    public RefreshToken CreateForUser(Guid userId)
+    {
+        // La fabrica obtiene la politica de expiracion inyectada dinamicamente
+        TimeSpan duration = policy.ExpirationDuration;
+        return RefreshToken.Create(userId, duration);
+    }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[float=htbp, style=CSharp, caption={Sobrescritura de SaveChangesAsync para persistir eventos de dominio.}, label={lst:savechanges}]
+public override async Task<int> SaveChangesAsync()
+{
+    List<IDomainEvent> domainEvents = GetDomainEvents();
+
+    await domainEventsDispatcher.DispatchAsync(domainEvents, cancellationToken);
+
+    InsertOutboxMessages(domainEvents);
+
+    return await base.SaveChangesAsync(cancellationToken);
+}
+\end{lstlisting}
+
+\begin{lstlisting}[float=htbp, style=CSharp, caption={Implementación del patrón Specification para la capa de persistencia de datos.}, label={lst:specification_pattern}]
+public abstract class BaseSpecification<T>(Expression<Func<T, bool>> criteria) 
+    : ISpecification<T>
+{
+    private readonly List<Expression<Func<T, object>>> _includes = [];
+    public Expression<Func<T, bool>> Criteria { get; } = criteria;
+    public IReadOnlyCollection<Expression<Func<T, object>>> Includes 
+        => _includes.AsReadOnly();
+        
+    protected void AddInclude(Expression<Func<T, object>> expr) 
+        => _includes.Add(expr);
+}
+
+// Especificacion concreta que encapsula la logica de filtrado e inclusion
+public sealed class UserWithActiveRefreshTokensSpecification 
+    : BaseSpecification<User>
+{
+    public UserWithActiveRefreshTokensSpecification(Guid userId)
+        : base(user => user.Id == userId)
+    {
+        AddInclude(user => user.RefreshTokens
+            .Where(rt => rt.RevokedAt == null && rt.ExpiresAt > DateTime.UtcNow));
+    }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[float=htbp, style=CSharp, caption={Validación en cascada mediante Chain of Responsibility.}, label={lst:permission_validation}]
+public sealed class OrganizationPermissionBehavior<TRequest, TResponse>(...) 
+    : IPipelineBehavior<TRequest, TResponse>
+{
+    public async Task<TResponse> Handle(TRequest request, 
+        RequestHandlerDelegate<TResponse> next, CancellationToken ct)
+    {
+        // [...] Extraccion de la configuracion de permisos requeridos
+        
+        Organization? org = await organizationRepository
+            .GetByIdAsync(permissionRequest.OrganizationId, ct);
+        if (org is null) return CreateFailureResponse(OrganizationNotFound); // Corta la cadena
+
+        OrganizationInvitation? invitation = org.Invitations
+            .FirstOrDefault(inv => inv.UserId == userContext.UserId);
+        if (invitation is null) return CreateFailureResponse(OrganizationMembershipRequired);
+
+        // [...] Evaluacion del nivel del rol
+        if (rolePermission?.Level == PermissionLevel.Full) 
+            return await next(ct); // Autorizado: pasa el control al siguiente eslabon
+            
+        return CreateFailureResponse(OrganizationPermissionDenied);
+    }
+}
+\end{lstlisting}
