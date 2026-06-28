@@ -28,8 +28,7 @@ La evaluación de los atributos de calidad y restricciones globales del sistema 
     
     \item \textbf{Escalabilidad y Disponibilidad:} Al estar la infraestructura de despliegue alojada en los servicios de Microsoft Azure (mediante el programa \emph{Azure for Students}), el sistema hereda directamente los \ac{SLA} del proveedor \emph{cloud}. En concreto, el \ac{SLA} de Microsoft para máquinas virtuales de instancia única con SSD Premium garantiza un \emph{uptime} del \textbf{99,9\%} \cite{azure_sla_vm}, cumpliendo con el requisito de disponibilidad exigido. La escalabilidad horizontal queda teóricamente garantizada gracias a la contenerización con Docker y a la naturaleza \emph{stateless} del servidor web.
     
-    \item \textbf{Usabilidad y Fluidez Visual:} El renderizado del Árbol de Trabajo en el cliente de React ha demostrado mantener la tasa de fotogramas requerida, permitiendo manipulaciones fluidas del grafo de tareas incluso con conjuntos de datos densos. La adopción del sistema de diseño \emph{shadcn/ui} ha asegurado el cumplimiento de las heurísticas de Nielsen y las directrices de contraste de accesibilidad web \cite{w3c2018wcag21}.
-\end{itemize}
+    \item \textbf{Usabilidad y Fluidez Visual:} El renderizado del Árbol de Trabajo en el cliente de React ha demostrado un rendimiento excelente frente a interacciones. Los análisis obtenidos con \emph{React Profiler} (ver Figura \ref{fig:react_profiler}) certifican que las actualizaciones visuales del grafo se resuelven en apenas \textbf{3,5 ms}. Al estar este tiempo de cómputo netamente por debajo del límite de 16,6 ms por fotograma (1000ms/60\ac{FPS}), se garantiza matemáticamente una fluidez teórica de 60 \ac{FPS} durante la manipulación de los nodos, evitando tirones. Asimismo, la adopción del sistema de diseño \emph{shadcn/ui} ha asegurado el cumplimiento de las heurísticas de Nielsen y las directrices de contraste de accesibilidad web \cite{w3c2018wcag21}.\end{itemize}
 
 \begin{figure}[htbp]
     \centering
@@ -43,6 +42,13 @@ La evaluación de los atributos de calidad y restricciones globales del sistema 
     \includegraphics[width=0.9\textwidth]{images/content/Conclusiones/performance.png}
     \caption{Resultados de la prueba de carga}
     \label{fig:performance}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{images/content/Conclusiones/react_profiler_performance.png}
+    \caption{Análisis de renderizado del componente del Árbol de Trabajo mediante React Profiler}
+    \label{fig:react_profiler}
 \end{figure}
 
 \section{Lecciones aprendidas}
