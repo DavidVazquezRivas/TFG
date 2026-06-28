@@ -161,6 +161,7 @@ A nivel funcional, el único resultado de este \emph{sprint} fue la implementaci
 \end{figure}
 
 \subsection{\emph{Sprint 9} - Agentes y notificaciones}
+
 En este \emph{sprint} se completa el desarrollo de la aplicación. Implementando los dos módulos restantes, el de agentes y el de notificaciones. Sobre el módulo de agentes, gran parte del trabajo ya se había hecho en el \emph{sprint} anterior, por lo que en esta iteración se completó, y se implementó la funcionalidad de notificaciones junto con las solicitudes de aprobación de diferentes acciones.
 
 \subsubsection{Problemas encontrados}
@@ -190,6 +191,27 @@ Al finalizar este \emph{sprint}, la aplicación queda completa en su alcance ini
     \caption{Vista de notificaciones y solicitudes de aprobación}
     \label{fig:notifications}
 \end{figure}
+
+\subsection{\emph{Sprint 10} - Pruebas de rendimiento}
+El objetivo principal de esta última iteración de desarrollo fue la creación de una \emph{suite} de pruebas de carga automatizadas. El propósito era dotar al proyecto de una herramienta capaz de someter a la \ac{API} a estrés concurrente para verificar el cumplimiento de los requisitos no funcionales de latencia (percentil 95 inferior a 300ms), simulando un tráfico realista en el entorno de despliegue de Azure.
+
+\subsubsection{Problemas encontrados}
+El problema más destacable ocurrió durante la fase de preparación de datos de prueba (\emph{setup}). Al intentar crear en cascada una Organización, un Proyecto y 20 Tareas, el sistema devolvía errores 404 (\emph{Not Found}) al intentar insertar las tareas. Esto sucedía porque, debido al patrón \emph{Outbox}, el módulo de Tareas aún no había procesado el evento de integración que le notificaba la existencia del nuevo proyecto, evidenciando la realidad de la consistencia eventual.
+
+Adicionalmente, se presentó el problema de la autenticación. En desarrollo se utilizaba un \emph{endpoint} de \emph{login} simulado (\texttt{dev-login}) que estaba lógicamente deshabilitado en el entorno de Azure por motivos de seguridad, lo que impedía a los usuarios virtuales de prueba autenticarse contra el servidor remoto.
+
+\subsubsection{Decisiones y adaptaciones implementadas}
+Para construir una batería de pruebas robusta y sortear los obstáculos técnicos, se tomaron las siguientes decisiones:
+
+\begin{itemize}
+    \item \textbf{Selección de k6 como herramienta:} Se descartaron alternativas como \emph{JMeter} o \emph{Postman} en favor de \emph{k6}. La elección se basó en su capacidad para programar escenarios complejos en JavaScript, su soporte nativo para ciclos de vida (\texttt{setup} y \texttt{teardown}) y la facilidad para escalar usuarios virtuales (\emph{VUs}) paramétricamente.
+    \item \textbf{Acomodación a la consistencia eventual:} Para solucionar el error 404 en la generación de datos, se introdujo una pausa explícita (\emph{sleep}) de 7 segundos en la fase de \texttt{setup} justo después de la creación del proyecto. Esto otorga al \emph{Background Worker} del patrón \emph{Outbox} el tiempo necesario para barrer la base de datos, publicar el evento y actualizar el \emph{Read Model} del módulo receptor antes de inyectar las tareas concurrentes.
+    \item \textbf{Perfiles y distribución de carga:} Se diseñó una estructura modular dividida en cinco escenarios paralelos (lectura/escritura de tareas, proyectos, organizaciones y comentarios). A cada escenario se le asignó un porcentaje de usuarios virtuales distinto para emular el comportamiento asimétrico del mundo real (donde hay más lecturas que escrituras).
+    \item \textbf{Inyección dinámica de credenciales:} Para solucionar el bloqueo de autenticación en Azure, se adaptó el \emph{script} para aceptar un \ac{JWT} inyectado directamente a través de una variable de entorno (\texttt{AUTH\_TOKEN}). Si la variable no existe, el sistema asume que está en local y utiliza el \emph{endpoint} de \emph{dev-login}; de lo contrario, utiliza el \emph{token} inyectado, manteniendo el código del servidor seguro y libre de puertas traseras.
+\end{itemize}
+
+\subsubsection{Resultados obtenidos}
+Como resultado de este \emph{sprint}, se obtuvo una herramienta de validación de rendimiento totalmente funcional, parametrizable mediante perfiles (\emph{smoke}, \emph{load}, \emph{stress}) e independiente del entorno. Al finalizar su ejecución, la \emph{suite} limpia automáticamente la base de datos (\texttt{teardown}) y genera reportes HTML y JSON con el desglose de percentiles. Esta herramienta permitió auditar el servidor en la nube y confirmar el éxito del rendimiento de la arquitectura, cuyos resultados empíricos se analizan en el capítulo de Conclusiones.
 
 \section{Consideraciones generales}
 Más allá de los problemas y soluciones de cada iteración, merece la pena comentar el impacto general que han tenido las decisiones arquitectónicas adoptadas. Desarrollar un Monolito Modular guiado por \ac{DDD} en solitario ha supuesto enfrentarse a problemas que alejaron el desarrollo de la teoría ideal.

@@ -303,7 +303,7 @@ La navegación espacial se resolvió adoptando un patrón de Panel Lateral Jerá
 El mayor reto de la interfaz consistía en representar jerarquías de tareas complejas. Para ello, el sistema abandona las tablas tradicionales en favor de representaciones visuales que permiten un escaneo cognitivo rápido:
 
 \begin{itemize}
-    \item \textbf{Mapeo jerárquico (\emph{Tree View}):} La vista principal del proyecto (Figura \ref{fig:ui-treeview}) se abstrae en un grafo interactivo bidimensional. Los elementos de trabajo (\emph{Work Items}) se representan como nodos con dependencias visuales explícitas (líneas conectoras). El color y el relleno de los nodos actúan como barras de progreso y estado radiales, siguiendo lo definido en el capítulo de análisis.
+    \item \textbf{Mapeo jerárquico (\emph{Tree View}):} La vista principal del proyecto maquetada (Figura \ref{fig:ui-treeview}) se abstrae en un grafo interactivo bidimensional. Los elementos de trabajo (\emph{Work Items}) se representan como nodos con dependencias visuales explícitas (líneas conectoras). El color y el relleno de los nodos actúan como barras de progreso y estado radiales, siguiendo lo definido en el capítulo de análisis.
     \item \textbf{Gestión del contexto:} Al interactuar con un nodo, un panel lateral derecho se despliega con el detalle completo de la tarea, evitando la pérdida de contexto que supondría una redirección a una nueva página completa.
 \end{itemize}
 
@@ -318,9 +318,9 @@ El mayor reto de la interfaz consistía en representar jerarquías de tareas com
 El flujo de comunicación define cómo el sistema interactúa, responde y guía al usuario. Para garantizar una experiencia predecible, el diseño se fundamenta en tres pilares:
 
 \begin{itemize}
-    \item \textbf{Gestión de la espera asíncrona:} En operaciones que requieren llamadas complejas al \emph{backend} o procesamiento de la Inteligencia Artificial (Figura \ref{fig:ui-agentchat}), el sistema enmascara la latencia mediante comunicación visual. Los agentes integrados en el chat informan proactivamente de las acciones que van a ejecutar ("Voy a actualizar el estado del \emph{work item}..."), transformando el tiempo de procesamiento en una experiencia conversacional fluida.
+    \item \textbf{Gestión de la espera asíncrona:} En operaciones que requieren llamadas complejas al \emph{backend} o procesamiento de la Inteligencia Artificial(Figura \ref{fig:ui-agentchat}), el sistema enmascara la latencia mediante comunicación visual. Los agentes integrados en el chat informan proactivamente de las acciones que van a ejecutar ("Voy a actualizar el del \emph{work item}..."), transformando el tiempo de procesamiento en una experiencia conversacional fluida.
     \item \textbf{Confirmaciones y zonas de peligro:} La plataforma informa proactivamente sobre el resultado de las operaciones mediante notificaciones efímeras (\emph{toasts}) en las esquinas de la pantalla. Adicionalmente, las acciones destructivas se aíslan visualmente en Zonas de Peligro (\emph{Danger Zones}) y requieren confirmación explícita.
-    \item \textbf{Prevención de errores en autorizaciones:} El sistema materializa el modelo complejo de roles (Figura \ref{fig:ui-permissions}) en una interfaz tabular con semántica de colores clara (verde para control completo, amarillo para acciones supervisadas), minimizando el riesgo de que los administradores apliquen configuraciones de seguridad erróneas.
+    \item \textbf{Prevención de errores en autorizaciones:} El sistema materializa el modelo complejo de roles en la maqueta (Figura \ref{fig:ui-permissions}) en una interfaz tabular con semántica de colores clara (verde para control completo, amarillo para acciones supervisadas), minimizando el riesgo de que los administradores apliquen configuraciones de seguridad erróneas.
 \end{itemize}
 
 \begin{figure}[htbp]
