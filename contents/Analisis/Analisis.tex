@@ -265,7 +265,7 @@ HU-26 &
 \hline
 
 HU-27 &
-\textbf{Como} usuario, \textbf{quiero} poder minimizar partes del árbol de trabajo \textbf{para} enfocarme en las partes del proyecto que me interesen sin perder la visión global.
+\textbf{Como} usuario, \textbf{quiero} poder colapsar partes del árbol de trabajo \textbf{para} enfocarme en las partes del proyecto que me interesen sin perder la visión global.
 & \emph{Must Have} \\
 \hline
 
@@ -352,13 +352,13 @@ Así mismo, se han identificado los requisitos no funcionales que rigen las rest
 \section{Modelado del Dominio}
 El análisis del núcleo de Leaftask se ha abordado desde la perspectiva del \ac{DDD} \cite{evans2004ddd}, priorizando la comprensión de las reglas de negocio. Dado que la gestión de proyectos asistida por inteligencia artificial presenta una alta complejidad conceptual, el dominio principal se ha descompuesto en múltiples \emph{Bounded Contexts} \cite{fowler2014boundedcontext}.
 
-En esta fase de análisis, cada \emph{Bounded Context} \cite{fowler2014boundedcontext} establece un límite estricto donde un subconjunto del modelo de dominio tiene total validez y autonomía. Esta separación permite aislar y entender áreas de responsabilidad claras (como la gestión de identidades, la estructura de los elementos de trabajo o la coordinación de agentes automatizados), garantizando que el modelo refleje fielmente la realidad del negocio antes de tomar decisiones.
+En esta fase de análisis, cada \emph{Bounded Context} establece un límite estricto donde un subconjunto del modelo de dominio tiene total validez y autonomía. Esta separación permite aislar y entender áreas de responsabilidad claras (como la gestión de identidades, la estructura de los elementos de trabajo o la coordinación de agentes automatizados), garantizando que el modelo refleje fielmente la realidad del negocio antes de tomar decisiones.
 
 A continuación, se detallan los pilares de este análisis, comenzando por el vocabulario compartido que vertebra el sistema, hasta llegar a la representación de los datos de cada contexto.
 
 \subsection{Lenguaje ubicuo}
 
-Siguiendo los principios del \ac{DDD}\cite{evans2004ddd}, se ha definido un lenguaje ubicuo que unifica la terminología utilizada por los desarrolladores y los usuarios, facilitando la comunicación y el entendimiento mutuo entre ambos grupos. Este lenguaje se ha construido a partir de los términos y conceptos más relevantes para la gestión de proyectos, y se ha utilizado de forma consistente en toda la documentación, los diagramas y el código fuente de la aplicación.
+Siguiendo los principios del \ac{DDD}, se ha definido un lenguaje ubicuo que unifica la terminología utilizada por los desarrolladores y los usuarios, facilitando la comunicación y el entendimiento mutuo entre ambos grupos. Este lenguaje se ha construido a partir de los términos y conceptos más relevantes para la gestión de proyectos, y se ha utilizado de forma consistente en toda la documentación, los diagramas y el código fuente de la aplicación.
 
 \begin{description}
     \item[Organización:] Entidad principal que agrupa a múltiples usuarios y proyectos bajo un mismo espacio de trabajo, centralizando la gestión de permisos y roles a nivel corporativo o de grupo.
@@ -367,7 +367,6 @@ Siguiendo los principios del \ac{DDD}\cite{evans2004ddd}, se ha definido un leng
     \item[Gestor:] Rol encargado de la configuración, supervisión y administración de proyectos y organizaciones.
     \item[Agente de \ac{IA}:] Miembro del equipo automatizado que colabora en el proyecto. Actúa bajo un rol específico y tiene capacidad para interactuar con el sistema de manera análoga a un usuario humano.
     \item[Elemento de Trabajo (\emph{Work Item}):] Unidad básica de gestión dentro de un proyecto. Representa una tarea, funcionalidad o incidencia, y encapsula información como estado, responsable, esfuerzo estimado y dependencias.
-    \item[Subtarea:] Elemento de trabajo que se deriva o desglosa de un elemento de trabajo padre más complejo, estableciendo una relación jerárquica.
     \item[Árbol de Trabajo:] Representación visual, jerárquica e interactiva del conjunto de elementos de trabajo de un proyecto en forma de grafo.
     \item[Nodo:] Representación gráfica de un único Elemento de Trabajo dentro del Árbol de Trabajo. Sus atributos visuales (forma, tamaño, color y relleno) comunican instantáneamente el tipo de trabajo, el esfuerzo estimado, el estado y el avance.
     \item[Estado:] Situación operativa actual de un elemento de trabajo en su ciclo de vida (pendiente, en progreso, bloqueado, completado).
@@ -427,7 +426,7 @@ Este módulo gestiona la información relacionada con los proyectos, sus miembro
     \item \textbf{\emph{agent\_readmodels}:} Almacena información de lectura de los agentes de \ac{IA} para conocer los pertenecientes a un proyecto y su rol dentro de este.
     \item \textbf{\emph{project\_invitations}:} Almacena las invitaciones para unirse a un proyecto, los miembros activos de un proyecto son los que tienen una invitación en estado aceptada. Aquí también encontramos un polimorfismo ya que se pueden invitar tanto usuarios humanos como agentes de \ac{IA}.
     \item \textbf{\emph{project\_roles}:} Almacena los roles definidos a nivel de proyecto, como Gestor, Desarrollador, etc.
-    \item \textbf{\emph{project\_permissions\_groups}:} Almacena los grupos de permisos de proyecto disponibles en el sistema, unicamente se han definido para diferenciar visualmente los permisos que afectan a la gestión del proyecto de los que afectan a la gestión de los elementos de trabajo.
+    \item \textbf{\emph{project\_permissions\_groups}:} Almacena los grupos de permisos de proyecto disponibles en el sistema (permisos correspondientes a la gestión de elementos de trabajo, la configuración del proyecto, la gestión de miembros, etc.), para poder agrupar los permisos de forma más sencilla.
     \item \textbf{\emph{project\_permissions}:} Almacena los permisos de proyecto disponibles en el sistema, como Configurar Proyecto, Crear Elemento de Trabajo, etc.
     \item \textbf{\emph{project\_role\_permissions}:} Tabla intermedia que asocia los roles de proyecto con sus permisos correspondientes y su nivel sobre estos permisos.
     \item \textbf{\emph{field\_types}:} Almacena los tipos de campos personalizados disponibles en el sistema, como texto, número, fecha, etc.
