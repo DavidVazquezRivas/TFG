@@ -291,6 +291,163 @@ El patrón \emph{Strategy} define una familia de algoritmos, los encapsula y los
 
 El Listado \ref{lst:strategy_pattern} muestra un ejemplo de implementación de este patrón para la inyección de datos iniciales en la base de datos.
 
+\section{Modelo de Datos}
+Siguiendo el enfoque de \ac{DDD}\cite{evans2004ddd}, se ha diseñado un modelo conceptual de datos que refleja fielmente las entidades y relaciones del negocio. Si bien el dominio se concibe bajo un paradigma orientado a objetos, se ha optado por emplear el \ac{MER}\cite{chen1976entity} para representar la estructura de la información que deberá ser persistida.
+
+Dada la amplitud de la información que maneja el sistema, el modelo de datos no se presenta mediante un diagrama global. En su lugar, se ha segmentado haciendo corresponder los diagramas \ac{MER} con los \emph{Bounded Contexts} previamente identificados. Esta agrupación lógica agiliza la comprensión de los datos y asegura que cada módulo analizado mantenga una alta cohesión en torno a su contexto de negocio específico.
+
+\subsection{Modelo de Usuarios y Identidad}
+Este módulo es responsable de gestionar la información relacionada con los usuarios, su autenticación y sus estadísticas (ver Figura \ref{fig:mer-usuarios}). Incluye las entidades:
+\begin{itemize}
+    \item \textbf{\emph{refresh\_tokens}:} Almacena los tokens de refresco generados para los usuarios, es importante persistirlos para poder invalidarlos en caso de compromiso de la cuenta.
+    \item \textbf{\emph{users}:} Almacena la información básica de los usuarios, como su nombre, correo electrónico, rol y zona horaria.
+    \item \textbf{\emph{profile\_images}:} Almacena información sobre las imágenes de perfil de los usaurios como su URL y metadatos asociados.
+    \item \textbf{\emph{skill\_types}:} Almacena los tipos de habilidades que puede tener un usuario (lenguajes, metodologías, herramientas, etc.)
+    \item \textbf{\emph{skills}:} Almacena las habilidades disponibles en el sistema, asociadas a un tipo de habilidad.
+    \item \textbf{\emph{user\_skill\_metrics}:} Tabla intermedia que asocia a cada usuario con sus habilidades y contiene métricas como experiencia, calidad, velocidad y sesgo de predicción.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-users.png}
+    \caption{\ac{MER} del módulo de Usuarios e Identidad}
+    \label{fig:mer-usuarios}
+\end{figure}
+
+\subsection{Módulo de Organizaciones}
+Este módulo gestiona la información relacionada con las organizaciones, sus miembros y roles (ver Figura \ref{fig:mer-organizaciones}). Incluye las entidades:
+\begin{itemize}
+    \item \textbf{\emph{organizations}:} Almacena la información básica de las organizaciones, como su nombre, descripción y website.
+    \item \textbf{\emph{organization\_invitations}:} Almacena las invitaciones enviadas a usuarios para unirse a una organización, incluyendo el estado de la invitación. Los miembros activos de la organización, son los que tienen una invitación en estado aceptada.
+    \item \textbf{\emph{organization\_roles}:} Almacena los roles definidos a nivel de organización, como Administrador, Gestor, Miembro, etc.
+    \item \textbf{\emph{organization\_permissions}:} Almacena los permisos de organización disponibles en el sistema, como Crear Proyecto, Invitar Usuario, etc.
+    \item \textbf{\emph{organization\_role\_permissions}:} Tabla intermedia que asocia los roles de organización con sus permisos correspondientes y su nivel sobre estos permisos.
+    \item \textbf{\emph{user\_readmodels}:} Almacena información de lectura específica de los usuarios dentro del contexto de una organización. Sigue el patrón \ac{CQRS}\cite{fowler2007cqrs} que se detallará más adelante en el diseño de la arquitectura.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-organizations.png}
+    \caption{\ac{MER} del módulo de Organizaciones}
+    \label{fig:mer-organizaciones}
+\end{figure}
+
+\subsection{Módulo de Proyectos}
+Este módulo gestiona la información relacionada con los proyectos, sus miembros, roles, elementos de trabajo y otras configuraciones específicas de cada proyecto (ver Figura \ref{fig:mer-proyectos}). Incluye las entidades:
+\begin{itemize}
+    \item \textbf{\emph{projects}:} Almacena la información básica de los proyectos, como su nombre, abreviación, privacidad, etc.
+    \item \textbf{\emph{organization\_readmodels}:} Almacena información de lectura de las organizaciones para conocer la relación entre proyectos y organizaciones.
+    \item \textbf{\emph{user\_readmodels}:} Almacena información de lectura de los usuarios para conocer su relación con los proyectos. Aquí encontramos un polimorfismo ya que un proyecto puede pertenecer a una organización o a un usuario de forma independiente.
+    \item \textbf{\emph{agent\_readmodels}:} Almacena información de lectura de los agentes de \ac{IA} para conocer los pertenecientes a un proyecto y su rol dentro de este.
+    \item \textbf{\emph{project\_invitations}:} Almacena las invitaciones para unirse a un proyecto, los miembros activos de un proyecto son los que tienen una invitación en estado aceptada. Aquí también encontramos un polimorfismo ya que se pueden invitar tanto usuarios humanos como agentes de \ac{IA}.
+    \item \textbf{\emph{project\_roles}:} Almacena los roles definidos a nivel de proyecto, como Gestor, Desarrollador, etc.
+    \item \textbf{\emph{project\_permissions\_groups}:} Almacena los grupos de permisos de proyecto disponibles en el sistema (permisos correspondientes a la gestión de elementos de trabajo, la configuración del proyecto, la gestión de miembros, etc.), para poder agrupar los permisos de forma más sencilla.
+    \item \textbf{\emph{project\_permissions}:} Almacena los permisos de proyecto disponibles en el sistema, como Configurar Proyecto, Crear Elemento de Trabajo, etc.
+    \item \textbf{\emph{project\_role\_permissions}:} Tabla intermedia que asocia los roles de proyecto con sus permisos correspondientes y su nivel sobre estos permisos.
+    \item \textbf{\emph{field\_types}:} Almacena los tipos de campos personalizados disponibles en el sistema, como texto, número, fecha, etc.
+    \item \textbf{\emph{fields}:} Almacena los campos personalizados de los proyectos, incluyendo su tipo y nombre.
+    \item \textbf{\emph{project\_fields}:} Tabla intermedia que asocia los campos personalizados con los proyectos a los que pertenecen.
+    \item \textbf{\emph{options}:} Almacena las opciones de los campos personalizados de tipo selección, incluyendo su valor y su contenido.
+    \item \textbf{\emph{work\_item\_type\_readmodels}:} Almacena información de lectura de los tipos de elementos de trabajo, para poder relacionarlos con los campos personalizados.
+    \item \textbf{\emph{field\_applies}:} Tabla intermedia que asocia los campos personalizados con los tipos de elementos de trabajo a los que aplican.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-projects.png}
+    \caption{\ac{MER} del módulo de Proyectos}
+    \label{fig:mer-proyectos}
+\end{figure}
+
+\subsection{Módulo de Elementos de Trabajo}
+Este módulo gestiona la información relacionada con los elementos de trabajo, sus estados, responsables etc. (ver Figura \ref{fig:mer-elementos-trabajo}). Incluye las entidades:
+
+\begin{itemize}
+    \item \textbf{\emph{work\_items}:} Almacena la información de los elementos de trabajo, como su título, descripción, código, estimación, progreso, etc. Estos son los campos indispensables considerados el núcleo, ya que afectan a la forma de representar los nodos en el árbol de trabajo. Destaca una relación recursiva que permite representar la jerarquía de elementos de trabajo y subtareas.
+    \item \textbf{\emph{project\_readmodels}:} Almacena información de lectura de los proyectos para conocer a qué proyecto pertenece un elemento de trabajo.
+    \item \textbf{\emph{skill\_readmodels}:} Almacena información de lectura de las habilidades para conocer las habilidades requeridas por un elemento de trabajo.
+    \item \textbf{\emph{skill\_work\_items}:} Tabla intermedia que asocia las habilidades con los elementos de trabajo a los que requieren con sus estadísticas calculadas.
+    \item \textbf{\emph{field\_readmodels} y \emph{field\_type\_readmodels}:} Almacenan información de lectura de los campos personalizados y sus tipos para conocer los campos personalizados que tiene un elemento de trabajo.
+    \item \textbf{\emph{field\_values}:} Almacena los valores de los campos personalizados de cada elemento de trabajo.
+    \item \textbf{\emph{work\_item\_status}:} Almacena los estados de los elementos de trabajo definidos en el sistema.
+    \item \textbf{\emph{work\_item\_types}: } Almacena los tipos de elementos de trabajo definidos en el sistema.
+    \item \textbf{\emph{user\_readmodels}:} Almacena información de lectura de los usuarios para conocer quién tiene asignado un elemento de trabajo y otros datos como quién hace comentarios o registra trabajo realizado.
+    \item \textbf{\emph{attachments}:} Almacena la información de los archivos adjuntos a los elementos de trabajo ya sea en su descripción o en los comentarios, incluyendo su URL y metadatos asociados.
+    \item \textbf{\emph{work\_item\_comments}:} Almacena los comentarios realizados en los elementos de trabajo, incluyendo el autor, el contenido y la fecha de creación.
+    \item \textbf{\emph{work\_logs}:} Almacena los registros de trabajo realizados en los elementos de trabajo, incluyendo el usuario que realizó el registro, la cantidad de tiempo registrado y la fecha del registro.
+    \item \textbf{\emph{activity\_logs}:} Almacena un historial de cambios y eventos relacionados con los elementos de trabajo, como cambios de estado, reasignaciones, actualizaciones de campos, etc.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-work-items.png}
+    \caption{\ac{MER} del módulo de Elementos de Trabajo}
+    \label{fig:mer-elementos-trabajo}
+\end{figure}
+
+\subsection{Módulo de Chats}
+Este módulo gestiona la información relacionada con los chats entre usuarios y agentes de \ac{IA} (ver Figura \ref{fig:mer-chats}). Incluye las entidades:
+
+\begin{itemize}
+    \item \textbf{\emph{chats}:} Almacena la información básica de los chats, como su identificador y fecha de creación. 
+    \item \textbf{\emph{chat\_participants}:} Tabla intermedia que asocia los chats con sus participantes, ya sean usuarios humanos o agentes de \ac{IA}.
+    \item \textbf{\emph{chat\_messages}:} Almacena los mensajes enviados en los chats, incluyendo el autor, el contenido, la fecha de envío y su estado (enviado, entregado, leído).
+    \item \textbf{\emph{user\_readmodels}:} Almacena información de lectura de los usuarios para conocer su participación en los chats.
+    \item \textbf{\emph{agent\_readmodels}:} Almacena información de lectura de los agentes de \ac{IA} para conocer su participación en los chats.
+    \item \textbf{\emph{project\_readmodels}:} Almacena información de lectura de los proyectos para conocer a qué proyecto pertenece un agente.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-chats.png}
+    \caption{\ac{MER} del módulo de Chats}
+    \label{fig:mer-chats}
+\end{figure}
+
+\subsection{Módulo de Agentes}
+Este módulo gestiona la información relacionada con los agentes de \ac{IA} que colaboran en los proyectos (ver Figura \ref{fig:mer-agentes}). Incluye las entidades:
+
+\begin{itemize}
+    \item \textbf{\emph{project\_readmodels}:} Almacena información de lectura de los proyectos para conocer a qué proyecto pertenece un agente.
+    \item \textbf{\emph{model\_providers}:} Almacena los proveedores de modelos de \ac{IA} disponibles en el sistema, como OpenAI, Claude, etc. junto con sus tokens de \ac{API}.
+    \item \textbf{\emph{models}:} Almacena los modelos de \ac{IA} disponibles en el sistema, asociados a un proveedor de modelos con su descripción y precio por millón de tokens de entrada.
+    \item \textbf{\emph{agents}:} Almacena la información de los agentes de \ac{IA} creados en el sistema, incluyendo su nombre, instrucciones y \emph{system prompt}.
+    \item \textbf{\emph{model\_configs}:} Tabla intermedia que asocia los agentes de \ac{IA} con los modelos de \ac{IA} que utilizan, incluyendo la configuración específica del modelo (temperatura y máximo de tokens).
+    \item \textbf{\emph{agent\_templates}:} Almacena las plantillas de agentes de \ac{IA} predefinidos en el sistema, incluyendo su nombre, descripción e instrucciones. Ejemplos de plantillas pueden ser el agente \emph{Daily Standup} o el agente \emph{Desglose de Trabajo}.
+    \item \textbf{\emph{agent\_time\_triggers}:} Almacena los disparadores temporales configurados para los agentes de \ac{IA}, incluyendo la frecuencia de ejecución, zona horaria etc. Estos disparadores permiten configurar la ejecución automática de los agentes en función del tiempo, como por ejemplo ejecutar el agente \emph{Daily Standup} todos los días a las 9:00 am.
+    \item \textbf{\emph{agent\_event\_triggers}:} Almacena los disparadores de eventos configurados para los agentes de \ac{IA}, incluyendo el tipo de evento que los dispara (creación de elemento de trabajo, cambio de estado, etc.) y las condiciones específicas del evento. Estos disparadores permiten configurar la ejecución automática de los agentes en función de eventos específicos dentro del proyecto.
+    \item \textbf{\emph{agent\_executions}:} Representa una instancia de ejecución de un agente de \ac{IA}, que puede ser disparada mediante alguno de los disparadores definidos (mode: regular) o mediante un mensaje directo de un usuario (mode: direct query). Almacena información sobre la ejecución del agente, como su estado (pendiente, en progreso, completada, fallida y suspendida) y el \emph{payload} de entrada.
+    \item \textbf{\emph{agent\_execution\_messages}:} Almacena los mensajes generados durante la ejecución de un agente de \ac{IA}, incluyendo los mensajes del sistema, los mensajes de usuario y los mensajes generados por el agente. Estos mensajes permiten mantener un contexto completo de la ejecución del agente.
+    \item \textbf{\emph{agent\_execution\_pending\_events}:} Almacena los eventos de los que está pendiente una ejecución de un agente de \ac{IA} para poder reactivar la ejecución cuando se cumplan las condiciones del evento. Por ejemplo, si la ejecución de un agente está pendiente de la respuesta de un usuario para acabar su ejecución. Es importante no solo el tipo de evento esperado, sino el \emph{correlation\_id} del evento para poder asociarlo con la ejecución correcta.
+ \end{itemize}
+
+ \begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-agents.png}
+    \caption{\ac{MER} del módulo de Agentes}
+    \label{fig:mer-agentes}
+\end{figure}
+
+\subsection{Modelo de Notificaciones}
+Este módulo gestiona la información relacionada con las notificaciones enviadas a los usuarios, además de la aceptación de solicitudes de aprobación para acciones que requieren cierto nivel de permisos (ver Figura \ref{fig:mer-notificaciones}). Incluye las entidades:
+
+\begin{itemize}
+    \item \textbf{\emph{project\_permission\_readmodels}:} Almacena información de lectura de los permisos de proyecto, para conocer los permisos de cada usuario en cada proyecto y poder determinar si una approval request le afecta o no.
+    \item \textbf{\emph{organization\_permission\_readmodels}:} Almacena información de lectura de los permisos de organización, para conocer los permisos de cada usuario en cada organización y poder determinar si una approval request le afecta o no.
+    \item \textbf{\emph{user\_readmodels}:} Almacena información de lectura de los usuarios para relacionarlos con las notificaciones que reciben, las que envían, las solicitudes de aprobación que les afectan, y sus comentarios en estas.
+    \item \textbf{\emph{notifications}:} Almacena las notificaciones enviadas a los usuarios, incluyendo el tipo de notificación, el contexto (id de proyecto u organización), y el objetivo (id del elemento que genera la notificación, como un elemento de trabajo, un proyecto, un agente, etc.)
+    \item \textbf{\emph{approval\_requests}:} Almacena las solicitudes de aprobación generadas para acciones que requieren validación, incluyendo el estado, el tipo de contexto (proyecto u organización), el id del contexto, el id del elemento que genera la solicitud, el tipo de acción que se solicita aprobar (o nombre de la operación) y el payload con la información para realizar esa acción automáticamente si la solicitud es aprobada.
+    \item \textbf{\emph{actions}:} Almacena las acciones que se pueden ejecutar automáticamente al aprobar una solicitud de aprobación.
+    \item \textbf{\emph{request\_comments}:} Almacena los comentarios realizados en las solicitudes de aprobación, incluyendo el autor, el contenido y la fecha de creación.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/content/Analisis/mer-notifications.png}
+    \caption{\ac{MER} del módulo de Notificaciones}
+    \label{fig:mer-notificaciones}
+\end{figure}
+
 \section{Diseño de la interfaz de usuario}
 El diseño de la \ac{UI} de Leaftask se concibió con el objetivo principal de ofrecer una experiencia fluida y reducir la carga cognitiva del usuario al enfrentarse a un sistema con alta densidad de información (gestión de proyectos jerárquicos e interacciones con inteligencia artificial) \cite{sweller1988cognitive}. Para lograr esto, se establecieron patrones de interacción consistentes que priman la claridad y el pragmatismo sobre la ornamentación visual.
 
